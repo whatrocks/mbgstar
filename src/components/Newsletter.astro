@@ -1,0 +1,33 @@
+---
+import { site } from '../data/site';
+
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+---
+
+<section class:list={['newsletter', compact && 'newsletter--compact']}>
+  <div class="newsletter-copy">
+    <p class="eyebrow">Newsletter</p>
+    <h2>Get show drops, music news, and store launches by email.</h2>
+    <p>
+      This uses Substack. Replace the publication URL in
+      <code>src/data/site.ts</code> if your final Substack handle differs.
+    </p>
+    <a href={site.newsletterUrl} class="newsletter-link" target="_blank" rel="noreferrer">
+      Open on Substack
+    </a>
+  </div>
+  <div class="newsletter-frame">
+    <iframe
+      src={site.newsletterEmbedUrl}
+      width="100%"
+      height={compact ? '240' : '320'}
+      frameborder="0"
+      scrolling="no"
+      title="Money Back Guarantee* newsletter signup"
+    ></iframe>
+  </div>
+</section>

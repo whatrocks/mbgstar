@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout title="Store" description="Store and merch for Money Back Guarantee*.">
+  <section class="page-intro">
+    <p class="eyebrow">Store</p>
+    <h1>Current Merch</h1>
+    <p>Swap placeholder copy for your real storefront link when the shop is live.</p>
+  </section>
+
+  <section class="feature-grid">
+    {site.merch.map((item) => (
+      <article class="panel">
+        <p class="eyebrow">{item.price}</p>
+        <h2>{item.name}</h2>
+        <p>{item.detail}</p>
+        <a href={site.newsletterUrl} target="_blank" rel="noreferrer">Get drop alerts</a>
+      </article>
+    ))}
+  </section>
+</BaseLayout>

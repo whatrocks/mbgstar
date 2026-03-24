@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout>
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Official Website</p>
+      <h1>Money Back Guarantee*</h1>
+      <p class="hero-text">
+        Jagged pop songs, basement-volume hooks, and enough broken equipment to
+        count as a visual identity.
+      </p>
+      <div class="hero-actions">
+        <a class="button" href="/music">Listen Now</a>
+        <a class="button button--ghost" href="/shows">See Shows</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <p class="eyebrow">Next Up</p>
+      <ul class="stack-list">
+        {site.upcomingShows.slice(0, 3).map((show) => (
+          <li>
+            <strong>{show.date}</strong>
+            <span>{show.city}</span>
+            <span>{show.venue}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="feature-grid">
+    <article class="panel">
+      <p class="eyebrow">Shows</p>
+      <h2>Live dates and fresh flyers.</h2>
+      <p>Tour stops, support bills, and last-minute additions all land here first.</p>
+      <a href="/shows">View schedule</a>
+    </article>
+    <article class="panel">
+      <p class="eyebrow">Music</p>
+      <h2>Singles, sessions, and whatever survived the mix.</h2>
+      <p>Keep up with new releases and direct listeners to your streaming links.</p>
+      <a href="/music">Open music</a>
+    </article>
+    <article class="panel">
+      <p class="eyebrow">Store</p>
+      <h2>Merch that looks good under bad venue lighting.</h2>
+      <p>Highlight drops, physical media, and links out to your checkout platform.</p>
+      <a href="/store">Go to store</a>
+    </article>
+  </section>
+
+  <Newsletter />
+</BaseLayout>

@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout title="Music" description="Music by Money Back Guarantee*.">
+  <section class="page-intro">
+    <p class="eyebrow">Music</p>
+    <h1>Listen</h1>
+    <p>
+      Replace these placeholder releases with streaming links, embedded players,
+      videos, or a Bandcamp discography.
+    </p>
+  </section>
+
+  <section class="music-list">
+    {site.releases.map((release) => (
+      <article class="music-card">
+        <div>
+          <p class="eyebrow">{release.format} / {release.year}</p>
+          <h2>{release.title}</h2>
+          <p>{release.description}</p>
+        </div>
+        <a href={site.socials[1].href} target="_blank" rel="noreferrer">Open release</a>
+      </article>
+    ))}
+  </section>
+</BaseLayout>
