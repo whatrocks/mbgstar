@@ -1,0 +1,100 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const pages = [
+  {
+    src: '/coloring-band.png',
+    alt: 'Money Back Guarantee* band on stage — a black-and-white line drawing ready for coloring.',
+    title: 'The Band',
+  },
+  {
+    src: '/coloring-drummer.png',
+    alt: 'A cash-register cartoon character rocking out behind an MBG* drum kit — line drawing ready for coloring.',
+    title: 'Cash-Register Guy',
+  },
+];
+---
+
+<BaseLayout title="Coloring Pages — Money Back Guarantee*">
+  <h1>Coloring Pages</h1>
+  <p>Your fridge will thank you.</p>
+
+  {pages.map((page) => (
+    <article class="coloring-page">
+      <h2>{page.title}</h2>
+      <figure class="image-stage">
+        <img src={page.src} alt={page.alt} />
+      </figure>
+      <button type="button" class="print-btn" data-print-src={page.src}>
+        Print this page
+      </button>
+    </article>
+  ))}
+</BaseLayout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.print-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const src = btn.dataset.printSrc;
+      if (!src) return;
+      const win = window.open('', '_blank', 'width=900,height=1100');
+      if (!win) {
+        alert('Please allow pop-ups to print this coloring page.');
+        return;
+      }
+      win.document.write(`<!doctype html>
+<html>
+  <head>
+    <title>Money Back Guarantee* Coloring Page</title>
+    <style>
+      @page { size: landscape; margin: 0.5in; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+      img { display: block; width: 100%; height: 100vh; object-fit: contain; }
+    </style>
+  </head>
+  <body>
+    <img src="${src}" alt="Coloring page" onload="window.focus(); window.print(); window.onafterprint = () => window.close();" />
+  </body>
+</html>`);
+      win.document.close();
+    });
+  });
+</script>
+
+<style>
+  .coloring-page {
+    margin-bottom: 3rem;
+  }
+
+  .coloring-page h2 {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .print-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    border: 2px solid var(--ink);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 0.6rem 1rem 0.5rem;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    box-shadow: 5px 5px 0 #000;
+    cursor: pointer;
+  }
+
+  .print-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 4px 4px 0 #000;
+  }
+
+  .print-btn:active {
+    transform: translate(5px, 5px);
+    box-shadow: 0 0 0 #000;
+  }
+</style>
