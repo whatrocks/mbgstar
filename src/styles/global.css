@@ -81,6 +81,18 @@ body {
   height: auto;
 }
 
+.site-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--ink);
+}
+
+.site-footer h2 {
+  margin-top: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
 @media (max-width: 640px) {
   .page-shell {
     width: min(100%, calc(100% - 1rem));

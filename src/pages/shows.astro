@@ -4,4 +4,48 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout title="Shows — Money Back Guarantee*">
   <h1>Shows</h1>
+
+  <section>
+    <h2>Upcoming Shows</h2>
+    <ul class="show-list">
+      <li>
+        <span class="show-date">June 6, 2026</span>
+        <span class="show-name">Private House Party</span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Past Shows</h2>
+    <ul class="show-list">
+      <li>
+        <span class="show-date">Feb 28, 2026</span>
+        <span class="show-name">Private House Party</span>
+      </li>
+    </ul>
+  </section>
 </BaseLayout>
+
+<style>
+  section {
+    margin-bottom: 2rem;
+  }
+
+  .show-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .show-list li {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .show-date {
+    font-weight: 700;
+    min-width: 8rem;
+  }
+</style>
