@@ -1,0 +1,69 @@
+---
+const COUNT = 16;
+const macs = Array.from({ length: COUNT }, (_, i) => {
+  const size = 70 + Math.floor(Math.random() * 150);
+  const startY = -20 + Math.random() * 90;
+  const endY = startY + 25 + Math.random() * 45;
+  const duration = 16 + Math.random() * 22;
+  const delay = -Math.random() * duration;
+  const opacity = 0.45 + Math.random() * 0.4;
+  return {
+    key: i,
+    size,
+    startY: startY.toFixed(1),
+    endY: endY.toFixed(1),
+    duration: duration.toFixed(1),
+    delay: delay.toFixed(1),
+    opacity: opacity.toFixed(2),
+  };
+});
+---
+
+<div class="flying-macs" aria-hidden="true">
+  {macs.map((m) => (
+    <img
+      src="/mbg-mac.png"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      style={`--size:${m.size}px;--start-y:${m.startY}vh;--end-y:${m.endY}vh;--dur:${m.duration}s;--delay:${m.delay}s;--op:${m.opacity};`}
+    />
+  ))}
+</div>
+
+<style>
+  .flying-macs {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .flying-macs img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--size);
+    height: auto;
+    opacity: var(--op);
+    animation: mbg-fly var(--dur) linear infinite;
+    animation-delay: var(--delay);
+    will-change: transform;
+  }
+
+  @keyframes mbg-fly {
+    from {
+      transform: translate(110vw, var(--start-y));
+    }
+    to {
+      transform: translate(-30vw, var(--end-y));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flying-macs {
+      display: none;
+    }
+  }
+</style>
