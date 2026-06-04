@@ -4,11 +4,125 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout>
   <figure class="image-stage image-stage--bare">
-    <img
-      src="/mbg-circle.png"
-      alt="Money Back Guarantee* circular badge featuring a vintage Macintosh computer with a smiling face."
-      width="768"
-      height="768"
-    />
+    <button
+      type="button"
+      id="record-toggle"
+      class="record-toggle"
+      aria-label="Play Sunny Day"
+      aria-pressed="false"
+    >
+      <img
+        src="/mbg-circle.png"
+        alt="Money Back Guarantee* circular badge featuring a vintage Macintosh computer with a smiling face."
+        width="768"
+        height="768"
+      />
+    </button>
+    <audio id="record-audio" src="/sunny-day.mp3" preload="auto"></audio>
   </figure>
 </BaseLayout>
+
+<style>
+  .record-toggle {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .record-toggle:focus-visible {
+    outline: 3px dashed var(--ink);
+    outline-offset: 6px;
+  }
+
+  .record-toggle img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    animation: record-spin 2.4s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .record-toggle.is-spinning img {
+    animation-play-state: running;
+  }
+
+  .record-toggle.is-settling img {
+    animation: none;
+  }
+
+  @keyframes record-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .record-toggle img {
+      animation-duration: 8s;
+    }
+  }
+</style>
+
+<script>
+  const button = document.getElementById('record-toggle') as HTMLButtonElement | null;
+  const audio = document.getElementById('record-audio') as HTMLAudioElement | null;
+  const img = button?.querySelector('img') ?? null;
+
+  if (button && audio && img) {
+    let settleAnim: Animation | null = null;
+
+    const currentAngle = () => {
+      const t = getComputedStyle(img).transform;
+      if (t === 'none') return 0;
+      const m = new DOMMatrix(t);
+      let a = Math.atan2(m.b, m.a) * (180 / Math.PI);
+      if (a < 0) a += 360;
+      return a;
+    };
+
+    const clearSettle = () => {
+      if (settleAnim) {
+        settleAnim.cancel();
+        settleAnim = null;
+      }
+      button.classList.remove('is-settling');
+    };
+
+    button.addEventListener('click', () => {
+      if (audio.paused) {
+        clearSettle();
+        audio.play().then(() => {
+          button.classList.add('is-spinning');
+          button.setAttribute('aria-pressed', 'true');
+        }).catch(() => {});
+      } else {
+        audio.pause();
+        button.classList.remove('is-spinning');
+        button.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    audio.addEventListener('ended', () => {
+      audio.currentTime = 0;
+      const angle = currentAngle();
+      button.classList.remove('is-spinning');
+      button.classList.add('is-settling');
+      button.setAttribute('aria-pressed', 'false');
+
+      settleAnim = img.animate(
+        [
+          { transform: `rotate(${angle}deg)` },
+          { transform: 'rotate(360deg)' }
+        ],
+        { duration: 1400, easing: 'cubic-bezier(0.2, 0.6, 0.2, 1)', fill: 'forwards' }
+      );
+      settleAnim.onfinish = clearSettle;
+    });
+  }
+</script>
