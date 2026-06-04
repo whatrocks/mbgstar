@@ -1,12 +1,26 @@
 ---
 const COUNT = 16;
 const macs = Array.from({ length: COUNT }, (_, i) => {
-  const size = 70 + Math.floor(Math.random() * 150);
-  const startY = -20 + Math.random() * 90;
-  const endY = startY + 25 + Math.random() * 45;
+  const size = 30 + Math.floor(Math.random() * 60);
+  const startY = -10 + Math.random() * 110;
+  const deltaY = -80 + Math.random() * 160;
+  const endY = startY + deltaY;
   const duration = 16 + Math.random() * 22;
   const delay = -Math.random() * duration;
   const opacity = 0.45 + Math.random() * 0.4;
+  const rotate = -20 + Math.random() * 40;
+  const wobbleAmount = 14 + Math.random() * 24;
+  const wobbleDuration = 1.8 + Math.random() * 3.2;
+  const wobbleDelay = -Math.random() * wobbleDuration;
+
+  const steps = 5 + Math.floor(Math.random() * 5);
+  const waypoints = Array.from({ length: steps }, () => ({
+    x: (-1 + Math.random() * 2).toFixed(2),
+    y: (-1 + Math.random() * 2).toFixed(2),
+    r: (-14 + Math.random() * 28).toFixed(1),
+  }));
+  waypoints[waypoints.length - 1] = waypoints[0];
+
   return {
     key: i,
     size,
@@ -15,21 +29,45 @@ const macs = Array.from({ length: COUNT }, (_, i) => {
     duration: duration.toFixed(1),
     delay: delay.toFixed(1),
     opacity: opacity.toFixed(2),
+    rotate: rotate.toFixed(1),
+    wobbleAmount: wobbleAmount.toFixed(1),
+    wobbleDuration: wobbleDuration.toFixed(2),
+    wobbleDelay: wobbleDelay.toFixed(2),
+    waypoints,
   };
 });
+
+const keyframesCSS = macs
+  .map((m) => {
+    const blocks = m.waypoints
+      .map((w, idx) => {
+        const pct = ((idx / (m.waypoints.length - 1)) * 100).toFixed(2);
+        return `${pct}% { transform: translate(calc(var(--wob) * ${w.x}), calc(var(--wob) * ${w.y})) rotate(calc(var(--rot) + ${w.r}deg)); }`;
+      })
+      .join('\n');
+    return `@keyframes mbg-wobble-${m.key} {\n${blocks}\n}`;
+  })
+  .join('\n');
 ---
 
 <div class="flying-macs" aria-hidden="true">
   {macs.map((m) => (
-    <img
-      src="/mbg-mac.png"
-      alt=""
-      loading="lazy"
-      decoding="async"
-      style={`--size:${m.size}px;--start-y:${m.startY}vh;--end-y:${m.endY}vh;--dur:${m.duration}s;--delay:${m.delay}s;--op:${m.opacity};`}
-    />
+    <span
+      class="flyer"
+      style={`--start-y:${m.startY}vh;--end-y:${m.endY}vh;--dur:${m.duration}s;--delay:${m.delay}s;`}
+    >
+      <img
+        src="/mbg-mac.png"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        style={`--size:${m.size}px;--op:${m.opacity};--rot:${m.rotate}deg;--wob:${m.wobbleAmount}px;animation-name:mbg-wobble-${m.key};animation-duration:${m.wobbleDuration}s;animation-delay:${m.wobbleDelay}s;`}
+      />
+    </span>
   ))}
 </div>
+
+<style is:inline set:html={keyframesCSS}></style>
 
 <style>
   .flying-macs {
@@ -40,15 +78,23 @@ const macs = Array.from({ length: COUNT }, (_, i) => {
     z-index: 0;
   }
 
-  .flying-macs img {
+  .flyer {
     position: absolute;
     top: 0;
     left: 0;
+    display: inline-block;
+    animation: mbg-fly var(--dur) linear infinite;
+    animation-delay: var(--delay);
+    will-change: transform;
+  }
+
+  .flying-macs img {
+    display: block;
     width: var(--size);
     height: auto;
     opacity: var(--op);
-    animation: mbg-fly var(--dur) linear infinite;
-    animation-delay: var(--delay);
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
     will-change: transform;
   }
 

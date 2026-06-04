@@ -48,11 +48,21 @@ body {
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.1em;
+  text-indent: 0.1em;
   text-transform: uppercase;
+  background: #fff;
+  padding: 0.35rem 0.6rem;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.site-nav a {
+  transition: transform 60ms ease, box-shadow 60ms ease;
 }
 
 .site-nav a:hover {
-  text-decoration: underline;
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 #000;
 }
 
 .wordmark {
@@ -68,6 +78,39 @@ body {
   line-height: 1;
   text-transform: uppercase;
   box-shadow: 5px 5px 0 #000;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.wordmark:hover {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 #000;
+}
+
+main h1,
+main h2,
+main p,
+main .show-list li {
+  background: #fff;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 #000;
+}
+
+main h2,
+main .show-list li {
+  display: inline-block;
+}
+
+main h1 {
+  display: inline-block;
+}
+
+.site-footer h2 {
+  background: #fff;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 #000;
+  display: inline-block;
 }
 
 .image-stage {
@@ -79,6 +122,13 @@ body {
   display: block;
   width: 100%;
   height: auto;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.image-stage--bare img {
+  border: none;
+  box-shadow: none;
 }
 
 .site-footer {
@@ -103,5 +153,14 @@ body {
     padding-inline: 0.6rem;
     letter-spacing: 0.12em;
     text-align: center;
+  }
+
+  main h1,
+  main h2,
+  main p,
+  main .show-list,
+  .site-footer h2,
+  .image-stage {
+    margin-right: 0.75rem;
   }
 }
