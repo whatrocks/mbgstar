@@ -102,9 +102,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           button.setAttribute('aria-pressed', 'true');
         }).catch(() => {});
       } else {
+        const angle = currentAngle();
         audio.pause();
+        clearSettle();
         button.classList.remove('is-spinning');
+        button.classList.add('is-settling');
         button.setAttribute('aria-pressed', 'false');
+
+        settleAnim = img.animate(
+          [{ transform: `rotate(${angle}deg)` }],
+          { duration: 1, fill: 'forwards' }
+        );
       }
     });
 
