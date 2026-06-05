@@ -19,14 +19,15 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: "Courier New", Courier, monospace;
+  overflow-x: hidden;
 }
 
 .page-shell {
   position: relative;
   z-index: 1;
-  width: min(820px, calc(100% - 1.5rem));
+  width: min(820px, 100%);
   margin: 0 auto;
-  padding: 1.25rem 0 2rem;
+  padding: 1.25rem 0.75rem 2rem;
 }
 
 .site-header {
@@ -39,6 +40,8 @@ body {
 
 .site-nav {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.5rem;
 }
 
@@ -145,22 +148,16 @@ main h1 {
 
 @media (max-width: 640px) {
   .page-shell {
-    width: min(100%, calc(100% - 1rem));
     padding-top: 1rem;
+  }
+
+  .site-nav {
+    gap: 0.5rem 0.75rem;
   }
 
   .wordmark {
     padding-inline: 0.6rem;
     letter-spacing: 0.12em;
     text-align: center;
-  }
-
-  main h1,
-  main h2,
-  main p,
-  main .show-list,
-  .site-footer h2,
-  .image-stage {
-    margin-right: 0.75rem;
   }
 }
