@@ -75,7 +75,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const img = button?.querySelector('img') ?? null;
 
   if (button && audio && img) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const SPIN_DURATION = reducedMotion ? 8 : 2.4;
     let settleAnim: Animation | null = null;
+    let pausedAngle = 0;
 
     const currentAngle = () => {
       const t = getComputedStyle(img).transform;
@@ -92,27 +95,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         settleAnim = null;
       }
       button.classList.remove('is-settling');
+      img.style.transform = '';
     };
 
     button.addEventListener('click', () => {
       if (audio.paused) {
         clearSettle();
+        img.style.animationDelay = `${-(pausedAngle / 360) * SPIN_DURATION}s`;
         audio.play().then(() => {
           button.classList.add('is-spinning');
           button.setAttribute('aria-pressed', 'true');
         }).catch(() => {});
       } else {
         const angle = currentAngle();
+        pausedAngle = angle;
         audio.pause();
         clearSettle();
+        img.style.transform = `rotate(${angle}deg)`;
         button.classList.remove('is-spinning');
         button.classList.add('is-settling');
         button.setAttribute('aria-pressed', 'false');
-
-        settleAnim = img.animate(
-          [{ transform: `rotate(${angle}deg)` }],
-          { duration: 1, fill: 'forwards' }
-        );
       }
     });
 
@@ -130,7 +132,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         ],
         { duration: 1400, easing: 'cubic-bezier(0.2, 0.6, 0.2, 1)', fill: 'forwards' }
       );
-      settleAnim.onfinish = clearSettle;
+      settleAnim.onfinish = () => {
+        pausedAngle = 0;
+        img.style.animationDelay = '';
+        clearSettle();
+      };
     });
   }
 </script>
