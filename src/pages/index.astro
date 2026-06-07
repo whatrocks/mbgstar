@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import mbgCircle from '../assets/mbg-circle.png';
 ---
 
 <BaseLayout>
@@ -11,14 +13,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       aria-label="Play Sunny Day"
       aria-pressed="false"
     >
-      <img
-        src="/mbg-circle.png"
+      <Image
+        src={mbgCircle}
         alt="Money Back Guarantee* circular badge featuring a vintage Macintosh computer with a smiling face."
-        width="768"
-        height="768"
+        widths={[320, 480, 640, 768]}
+        sizes="(max-width: 480px) 90vw, (max-width: 768px) 70vw, 768px"
+        format="webp"
+        quality={80}
+        loading="eager"
       />
     </button>
-    <audio id="record-audio" src="/sunny-day.mp3" preload="auto"></audio>
+    <audio id="record-audio" src="/sunny-day.mp3" preload="none"></audio>
   </figure>
 </BaseLayout>
 

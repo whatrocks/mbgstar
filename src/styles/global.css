@@ -146,6 +146,39 @@ main h1 {
   letter-spacing: 0.1em;
 }
 
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: #fff;
+  padding: 0.35rem 0.6rem;
+  border: 2px solid var(--ink);
+  box-shadow: 5px 5px 0 #000;
+  transition: transform 60ms ease, box-shadow 60ms ease;
+}
+
+.social-links a:hover {
+  transform: translate(5px, 5px);
+  box-shadow: 0 0 0 #000;
+}
+
+.social-links svg {
+  display: block;
+}
+
 @media (max-width: 640px) {
   .page-shell {
     padding-top: 1rem;
