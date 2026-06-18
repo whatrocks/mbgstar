@@ -73,5 +73,24 @@ const {
         ></iframe>
       </footer>
     </div>
+    <script>
+      let spaceHeld = false;
+      document.addEventListener('keydown', (e) => {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.code === 'Space') {
+          spaceHeld = true;
+          return;
+        }
+        if ((e.key === 'm' || e.key === 'M') && spaceHeld) {
+          e.preventDefault();
+          document.body.classList.toggle('music-mode');
+        }
+      });
+      document.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') spaceHeld = false;
+      });
+      window.addEventListener('blur', () => { spaceHeld = false; });
+    </script>
   </body>
 </html>
