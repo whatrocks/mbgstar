@@ -12,6 +12,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <span class="show-date">Jan 20, 2027 · 7 PM</span>
         <span class="show-name">HopMonk Tavern Novato</span>
       </li>
+      <li>
+        <span class="show-date">Feb 5, 2027</span>
+        <span class="show-name">Paper Mill Creek Saloon</span>
+        <span class="show-detail">$10 cover</span>
+      </li>
     </ul>
   </section>
 
@@ -58,5 +63,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   .show-date {
     font-weight: 700;
     min-width: 8rem;
+  }
+
+  .show-detail {
+    opacity: 0.7;
   }
 </style>
