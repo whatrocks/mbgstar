@@ -1,48 +1,669 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const pages = [
-  {
-    src: '/coloring-band.png',
-    alt: 'Money Back Guarantee* band on stage — a black-and-white line drawing ready for coloring.',
-    title: 'The Band',
-  },
-  {
-    src: '/coloring-drummer.png',
-    alt: 'A cash-register cartoon character rocking out behind an MBG* drum kit — line drawing ready for coloring.',
-    title: 'Cash-Register Guy',
-  },
+const sheets = [
+  { id: 'band', src: '/coloring-band.png', title: 'The Band' },
+  { id: 'drummer', src: '/coloring-drummer.png', title: 'Cash-Register Guy' },
+];
+
+// Laid out two to a row, like the MacPaint tool palette.
+const tools = [
+  { id: 'text', label: 'Text', key: 'T', icon: '<path d="M5 7V4h14v3M12 4v16M8.5 20h7"/>' },
+  { id: 'bucket', label: 'Paint bucket', key: 'K', icon: '<path d="M4 11l7-7 7 7-7 7z"/><path d="M4 11h14"/><path d="M20 13c1.2 2 2 3.3 2 4.5a2 2 0 0 1-4 0c0-1.2.8-2.5 2-4.5z" fill="currentColor"/>' },
+  { id: 'spray', label: 'Spray can', key: 'S', icon: '<rect x="5" y="10" width="8" height="11" rx="1"/><path d="M7 10V7h4v3M11 6h2"/><g fill="currentColor" stroke="none"><circle cx="17" cy="4" r="1"/><circle cx="20" cy="6" r="1"/><circle cx="17" cy="8" r="1"/><circle cx="21" cy="10" r="1"/><circle cx="19" cy="2" r="1"/></g>' },
+  { id: 'brush', label: 'Paintbrush', key: 'B', icon: '<path d="M21 3l-8.5 8.5"/><path d="M12 11c-3-.8-6 1-6 4 0 2.2-1.2 3.5-3 5 4.5.4 9-1.2 10-5.5z" fill="currentColor"/>' },
+  { id: 'pencil', label: 'Pencil', key: 'P', icon: '<path d="M16 3l5 5L9 20H4v-5z"/><path d="M13 6l5 5"/>' },
+  { id: 'line', label: 'Line', key: 'L', icon: '<path d="M4 20L20 4"/>' },
+  { id: 'eraser', label: 'Eraser (double-click to clear)', key: 'E', icon: '<path d="M9 5h12l-6 14H3z"/><path d="M9 5l-6 14"/>' },
+  { id: 'picker', label: 'Color picker', key: 'I', icon: '<path d="M15 3l6 6-3 3-6-6z" fill="currentColor"/><path d="M13 8l-9 9v3h3l9-9"/>' },
+  { id: 'rect', label: 'Rectangle', key: 'R', icon: '<rect x="3" y="6" width="18" height="12"/>' },
+  { id: 'rect-fill', label: 'Filled rectangle', key: '', icon: '<rect x="3" y="6" width="18" height="12" fill="currentColor"/>' },
+  { id: 'oval', label: 'Oval', key: 'O', icon: '<ellipse cx="12" cy="12" rx="9" ry="6.5"/>' },
+  { id: 'oval-fill', label: 'Filled oval', key: '', icon: '<ellipse cx="12" cy="12" rx="9" ry="6.5" fill="currentColor"/>' },
+];
+
+const sizes = [2, 5, 10, 20, 40];
+
+const colors = [
+  '#000000', '#4a4a4a', '#8c8c8c', '#c8c8c8', '#ffffff', '#2e1f16', '#7a4a2a', '#c98a5a',
+  '#f1c9a5', '#f2e4cc', '#9e2f06', '#d9440d', '#e8202a', '#ff7aa8', '#9b4dca', '#3b4cca',
+  '#2f9be0', '#0b7a72', '#04524c', '#3fae49', '#a5d63a', '#ffd23f', '#f59e0b',
 ];
 ---
 
 <BaseLayout title="Coloring Pages — Money Back Guarantee*">
   <h1>Coloring Pages</h1>
-  <p>Your fridge will thank you.</p>
+  <p>
+    Pick a page and grab the paint bucket, or start from a blank sheet and draw whatever you want.
+    Your fridge will thank you.
+  </p>
 
-  {pages.map((page) => (
-    <article class="coloring-page">
-      <h2>{page.title}</h2>
-      <figure class="image-stage">
-        <img src={page.src} alt={page.alt} />
-      </figure>
-      <button type="button" class="print-btn clay-button" data-print-src={page.src}>
-        Print this page
-      </button>
-    </article>
-  ))}
+  <section class="macpaint" aria-label="MBG* Paint drawing program">
+    <div class="mp-titlebar">
+      <span class="mp-closebox" aria-hidden="true"></span>
+      <span class="mp-title">MBG* Paint</span>
+    </div>
+
+    <div class="mp-menubar">
+      <button type="button" data-action="undo" disabled>Undo</button>
+      <button type="button" data-action="redo" disabled>Redo</button>
+      <button type="button" data-action="clear">Clear</button>
+      <span class="mp-sep" aria-hidden="true"></span>
+      <button type="button" data-action="save">Save</button>
+      <button type="button" data-action="print">Print</button>
+      <span class="mp-sep" aria-hidden="true"></span>
+      <label class="mp-field">
+        Page
+        <select id="mp-sheet">
+          {sheets.map((sheet) => <option value={sheet.id} data-src={sheet.src}>{sheet.title}</option>)}
+          <option value="blank">Blank</option>
+        </select>
+      </label>
+      <label class="mp-field">
+        <input type="checkbox" id="mp-show-lines" checked />
+        Lines
+      </label>
+    </div>
+
+    <div class="mp-body">
+      <div class="mp-side">
+        <div class="mp-tools" role="radiogroup" aria-label="Tools">
+          {tools.map((tool) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={tool.id === 'bucket' ? 'true' : 'false'}
+              data-tool={tool.id}
+              title={tool.key ? `${tool.label} (${tool.key})` : tool.label}
+              aria-label={tool.label}
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true" set:html={tool.icon} />
+            </button>
+          ))}
+        </div>
+        <div class="mp-sizes" role="radiogroup" aria-label="Line size">
+          {sizes.map((size, i) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={i === 2 ? 'true' : 'false'}
+              data-size={i}
+              aria-label={`Line size ${i + 1}`}
+              style={`--h: ${[1, 2, 4, 7, 11][i]}px`}
+            ></button>
+          ))}
+        </div>
+      </div>
+
+      <div class="mp-stage" id="mp-stage">
+        <canvas id="mp-paint" width="1200" height="900"></canvas>
+        <canvas id="mp-lines" width="1200" height="900" aria-hidden="true"></canvas>
+        <canvas id="mp-overlay" width="1200" height="900" role="img" aria-label="Drawing canvas"></canvas>
+      </div>
+    </div>
+
+    <div class="mp-palette">
+      <canvas class="mp-current" id="mp-current" width="96" height="64" title="Current color and pattern"></canvas>
+      <div class="mp-patterns" id="mp-patterns" role="radiogroup" aria-label="Patterns"></div>
+      <div class="mp-colors" role="radiogroup" aria-label="Colors">
+        {colors.map((color, i) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={i === 11 ? 'true' : 'false'}
+            data-color={color}
+            aria-label={`Color ${color}`}
+            style={`background: ${color}`}
+          ></button>
+        ))}
+        <label class="mp-custom" title="Pick any color">
+          <span class="visually-hidden">Custom color</span>
+          <input type="color" id="mp-custom-color" value="#d9440d" />
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <p class="mp-tips">
+    Hold <kbd>Shift</kbd> for straight lines and perfect squares and circles.
+    Double-click the eraser to wipe the page. <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd> undoes.
+    The page's lines sit on their own layer on top, so you can paint and erase underneath without wrecking them.
+  </p>
 </BaseLayout>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('.print-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const src = btn.dataset.printSrc;
-      if (!src) return;
-      const win = window.open('', '_blank', 'width=900,height=1100');
-      if (!win) {
-        alert('Please allow pop-ups to print this coloring page.');
-        return;
+  const W = 1200;
+  const H = 900;
+  // Each pattern pixel is drawn as a CELL x CELL block so patterns read at screen size.
+  const CELL = 2;
+  const SIZES = [2, 5, 10, 20, 40];
+  const TEXT_SIZES = [24, 36, 52, 72, 100];
+  const UNDO_LIMIT = 25;
+  // Line-art pixels darker than this stop the paint bucket.
+  const LINE_STOP = 110;
+  const FILL_TOLERANCE = 60;
+
+  // 8x8 one-bit patterns, one byte per row, in the spirit of MacPaint's palette.
+  const PATTERNS = [
+    [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+    [0x77, 0xff, 0xdd, 0xff, 0x77, 0xff, 0xdd, 0xff],
+    [0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55],
+    [0x88, 0x00, 0x22, 0x00, 0x88, 0x00, 0x22, 0x00],
+    [0x80, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00],
+    [0xff, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00],
+    [0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88],
+    [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01],
+    [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80],
+    [0xff, 0x80, 0x80, 0x80, 0xff, 0x08, 0x08, 0x08],
+    [0xff, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80],
+    [0x18, 0x24, 0x42, 0x81, 0x81, 0x42, 0x24, 0x18],
+    [0x00, 0x10, 0x38, 0x10, 0x00, 0x01, 0x83, 0x01],
+    [0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81],
+  ];
+
+  type Point = { x: number; y: number };
+
+  const $ = <T extends Element>(sel: string) => document.querySelector(sel) as T;
+  const $$ = <T extends Element>(sel: string) => Array.from(document.querySelectorAll<T & Element>(sel)) as T[];
+
+  const stage = $<HTMLDivElement>('#mp-stage');
+  const paint = $<HTMLCanvasElement>('#mp-paint');
+  const lines = $<HTMLCanvasElement>('#mp-lines');
+  const overlay = $<HTMLCanvasElement>('#mp-overlay');
+  const current = $<HTMLCanvasElement>('#mp-current');
+  const pctx = paint.getContext('2d', { willReadFrequently: true })!;
+  const lctx = lines.getContext('2d')!;
+  const octx = overlay.getContext('2d')!;
+  const sheetSelect = $<HTMLSelectElement>('#mp-sheet');
+  const showLinesBox = $<HTMLInputElement>('#mp-show-lines');
+  const customColor = $<HTMLInputElement>('#mp-custom-color');
+  const patternBox = $<HTMLDivElement>('#mp-patterns');
+
+  let tool = 'bucket';
+  let color = '#d9440d';
+  let patternIndex = 0;
+  let sizeIndex = 2;
+  let showLines = true;
+  let linesAlpha: Uint8Array | null = null;
+  let previousTool = tool;
+
+  pctx.fillStyle = '#fff';
+  pctx.fillRect(0, 0, W, H);
+
+  // ---------- Colors and patterns ----------
+
+  const patternBit = (p: number[], x: number, y: number) => (p[y & 7] >> (7 - (x & 7))) & 1;
+
+  function hexToRgb(hex: string): [number, number, number] {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  function makeTile(p: number[], fg: string, cell: number) {
+    const tile = document.createElement('canvas');
+    tile.width = tile.height = 8 * cell;
+    const t = tile.getContext('2d')!;
+    t.fillStyle = '#fff';
+    t.fillRect(0, 0, tile.width, tile.height);
+    t.fillStyle = fg;
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        if (patternBit(p, x, y)) t.fillRect(x * cell, y * cell, cell, cell);
       }
-      win.document.write(`<!doctype html>
+    }
+    return tile;
+  }
+
+  function inkFor(ctx: CanvasRenderingContext2D): string | CanvasPattern {
+    if (patternIndex === 0) return color;
+    return ctx.createPattern(makeTile(PATTERNS[patternIndex], color, CELL), 'repeat')!;
+  }
+
+  const patternButtons = PATTERNS.map((p, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-label', i === 0 ? 'Solid' : `Pattern ${i}`);
+    btn.setAttribute('aria-checked', String(i === patternIndex));
+    const c = document.createElement('canvas');
+    c.width = 32;
+    c.height = 20;
+    btn.append(c);
+    btn.addEventListener('click', () => {
+      patternIndex = i;
+      patternButtons.forEach((b, j) => b.setAttribute('aria-checked', String(j === i)));
+      renderSwatches();
+    });
+    patternBox.append(btn);
+    return btn;
+  });
+
+  function renderSwatches() {
+    patternButtons.forEach((btn, i) => {
+      const c = btn.querySelector('canvas')!;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = ctx.createPattern(makeTile(PATTERNS[i], color, 2), 'repeat')!;
+      ctx.fillRect(0, 0, c.width, c.height);
+    });
+    const ctx = current.getContext('2d')!;
+    ctx.fillStyle = ctx.createPattern(makeTile(PATTERNS[patternIndex], color, 3), 'repeat')!;
+    ctx.fillRect(0, 0, current.width, current.height);
+  }
+
+  function setColor(next: string) {
+    color = next;
+    customColor.value = next;
+    $$<HTMLButtonElement>('[data-color]').forEach((b) =>
+      b.setAttribute('aria-checked', String(b.dataset.color === next)),
+    );
+    renderSwatches();
+  }
+
+  $$<HTMLButtonElement>('[data-color]').forEach((btn) =>
+    btn.addEventListener('click', () => setColor(btn.dataset.color!)),
+  );
+  customColor.addEventListener('input', () => setColor(customColor.value));
+
+  // ---------- Tools and sizes ----------
+
+  function setTool(next: string) {
+    if (tool !== 'picker') previousTool = tool;
+    tool = next;
+    $$<HTMLButtonElement>('[data-tool]').forEach((b) =>
+      b.setAttribute('aria-checked', String(b.dataset.tool === next)),
+    );
+    stage.dataset.tool = next;
+  }
+
+  $$<HTMLButtonElement>('[data-tool]').forEach((btn) => {
+    btn.addEventListener('click', () => setTool(btn.dataset.tool!));
+    // Double-clicking the eraser wipes the page, just like MacPaint.
+    if (btn.dataset.tool === 'eraser') btn.addEventListener('dblclick', clearAll);
+  });
+
+  function setSize(i: number) {
+    sizeIndex = i;
+    $$<HTMLButtonElement>('[data-size]').forEach((b) =>
+      b.setAttribute('aria-checked', String(Number(b.dataset.size) === i)),
+    );
+  }
+
+  $$<HTMLButtonElement>('[data-size]').forEach((btn) =>
+    btn.addEventListener('click', () => setSize(Number(btn.dataset.size))),
+  );
+
+  // ---------- Undo ----------
+
+  const undoStack: ImageData[] = [];
+  const redoStack: ImageData[] = [];
+  const undoBtn = $<HTMLButtonElement>('[data-action="undo"]');
+  const redoBtn = $<HTMLButtonElement>('[data-action="redo"]');
+
+  function updateUndoButtons() {
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+  }
+
+  function checkpoint(snapshot = pctx.getImageData(0, 0, W, H)) {
+    undoStack.push(snapshot);
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    redoStack.length = 0;
+    updateUndoButtons();
+  }
+
+  function undo() {
+    const prev = undoStack.pop();
+    if (!prev) return;
+    redoStack.push(pctx.getImageData(0, 0, W, H));
+    pctx.putImageData(prev, 0, 0);
+    updateUndoButtons();
+  }
+
+  function redo() {
+    const next = redoStack.pop();
+    if (!next) return;
+    undoStack.push(pctx.getImageData(0, 0, W, H));
+    pctx.putImageData(next, 0, 0);
+    updateUndoButtons();
+  }
+
+  function clearAll() {
+    checkpoint();
+    pctx.fillStyle = '#fff';
+    pctx.fillRect(0, 0, W, H);
+  }
+
+  // ---------- Line art layer ----------
+
+  let sheetToken = 0;
+
+  async function loadSheet() {
+    const token = ++sheetToken;
+    const option = sheetSelect.selectedOptions[0];
+    const src = option?.dataset.src;
+    lctx.clearRect(0, 0, W, H);
+    linesAlpha = null;
+    if (!src) return;
+
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    if (token !== sheetToken) return;
+
+    const tmp = document.createElement('canvas');
+    tmp.width = W;
+    tmp.height = H;
+    const t = tmp.getContext('2d', { willReadFrequently: true })!;
+    t.fillStyle = '#fff';
+    t.fillRect(0, 0, W, H);
+    const scale = Math.min(W / img.naturalWidth, H / img.naturalHeight);
+    const w = img.naturalWidth * scale;
+    const h = img.naturalHeight * scale;
+    t.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+
+    // Turn the scanned page into black ink on a transparent layer: white drops out.
+    const src4 = t.getImageData(0, 0, W, H).data;
+    const out = lctx.createImageData(W, H);
+    const alpha = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) {
+      const lum = (src4[i * 4] * 299 + src4[i * 4 + 1] * 587 + src4[i * 4 + 2] * 114) / 1000;
+      const a = Math.max(0, Math.min(255, ((235 - lum) * 255) / 195));
+      alpha[i] = a;
+      out.data[i * 4 + 3] = a;
+    }
+    lctx.putImageData(out, 0, 0);
+    linesAlpha = alpha;
+  }
+
+  sheetSelect.addEventListener('change', loadSheet);
+  showLinesBox.addEventListener('change', () => {
+    showLines = showLinesBox.checked;
+    lines.hidden = !showLines;
+  });
+
+  // ---------- Painting ----------
+
+  function toCanvas(e: PointerEvent): Point {
+    const r = overlay.getBoundingClientRect();
+    return { x: ((e.clientX - r.left) * W) / r.width, y: ((e.clientY - r.top) * H) / r.height };
+  }
+
+  function strokeSegment(a: Point, b: Point) {
+    if (tool === 'eraser') {
+      const s = Math.max(12, SIZES[sizeIndex] * 2);
+      const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / (s / 4)));
+      pctx.fillStyle = '#fff';
+      for (let i = 0; i <= steps; i++) {
+        const x = a.x + ((b.x - a.x) * i) / steps;
+        const y = a.y + ((b.y - a.y) * i) / steps;
+        pctx.fillRect(x - s / 2, y - s / 2, s, s);
+      }
+      return;
+    }
+    const width = tool === 'pencil' ? 2 : SIZES[sizeIndex];
+    const ink = tool === 'pencil' ? color : inkFor(pctx);
+    if (a.x === b.x && a.y === b.y) {
+      pctx.fillStyle = ink;
+      pctx.beginPath();
+      pctx.arc(a.x, a.y, width / 2, 0, Math.PI * 2);
+      pctx.fill();
+      return;
+    }
+    pctx.strokeStyle = ink;
+    pctx.lineWidth = width;
+    pctx.lineCap = 'round';
+    pctx.lineJoin = 'round';
+    pctx.beginPath();
+    pctx.moveTo(a.x, a.y);
+    pctx.lineTo(b.x, b.y);
+    pctx.stroke();
+  }
+
+  function spray(p: Point) {
+    const radius = Math.max(14, SIZES[sizeIndex] * 2);
+    const count = 10 + SIZES[sizeIndex];
+    pctx.fillStyle = inkFor(pctx);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.sqrt(Math.random()) * radius;
+      pctx.fillRect(p.x + Math.cos(angle) * dist, p.y + Math.sin(angle) * dist, 2, 2);
+    }
+  }
+
+  function constrain(a: Point, b: Point, shift: boolean): Point {
+    if (!shift) return b;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    if (tool === 'line') {
+      const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+      const len = Math.hypot(dx, dy);
+      return { x: a.x + Math.cos(angle) * len, y: a.y + Math.sin(angle) * len };
+    }
+    const side = Math.max(Math.abs(dx), Math.abs(dy));
+    return { x: a.x + Math.sign(dx || 1) * side, y: a.y + Math.sign(dy || 1) * side };
+  }
+
+  function drawShape(ctx: CanvasRenderingContext2D, a: Point, b: Point) {
+    const ink = inkFor(ctx);
+    ctx.strokeStyle = ink;
+    ctx.fillStyle = ink;
+    ctx.lineWidth = SIZES[sizeIndex];
+    ctx.lineCap = 'round';
+    ctx.lineJoin = tool === 'line' ? 'round' : 'miter';
+    ctx.beginPath();
+    if (tool === 'line') {
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+    } else if (tool.startsWith('rect')) {
+      ctx.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+    } else {
+      ctx.ellipse((a.x + b.x) / 2, (a.y + b.y) / 2, Math.abs(b.x - a.x) / 2, Math.abs(b.y - a.y) / 2, 0, 0, Math.PI * 2);
+    }
+    if (tool.endsWith('-fill')) ctx.fill();
+    ctx.stroke();
+  }
+
+  function floodFill(p: Point) {
+    const x0 = Math.floor(p.x);
+    const y0 = Math.floor(p.y);
+    if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= H) return;
+    const la = showLines ? linesAlpha : null;
+    const seed = y0 * W + x0;
+    // Clicking right on a line does nothing; the lines aren't paintable.
+    if (la && la[seed] > LINE_STOP) return;
+
+    const img = pctx.getImageData(0, 0, W, H);
+    const d = img.data;
+    const sr = d[seed * 4];
+    const sg = d[seed * 4 + 1];
+    const sb = d[seed * 4 + 2];
+    const mask = new Uint8Array(W * H);
+    const match = (i: number) =>
+      !mask[i] &&
+      (!la || la[i] <= LINE_STOP) &&
+      Math.abs(d[i * 4] - sr) + Math.abs(d[i * 4 + 1] - sg) + Math.abs(d[i * 4 + 2] - sb) <= FILL_TOLERANCE;
+
+    // Scanline flood fill.
+    const stack = [x0, y0];
+    while (stack.length) {
+      const y = stack.pop()!;
+      let x = stack.pop()!;
+      let i = y * W + x;
+      while (x > 0 && match(i - 1)) {
+        x--;
+        i--;
+      }
+      let up = false;
+      let down = false;
+      while (x < W && match(i)) {
+        mask[i] = 1;
+        if (y > 0) {
+          if (match(i - W)) {
+            if (!up) stack.push(x, y - 1);
+            up = true;
+          } else up = false;
+        }
+        if (y < H - 1) {
+          if (match(i + W)) {
+            if (!down) stack.push(x, y + 1);
+            down = true;
+          } else down = false;
+        }
+        x++;
+        i++;
+      }
+    }
+
+    // Grow the fill under the soft edges of the line art (it's covered by the
+    // lines anyway) and one more pixel everywhere, so no white halos are left.
+    const grow = (allowed: (i: number) => boolean) => {
+      const add: number[] = [];
+      for (let i = 0; i < W * H; i++) {
+        if (mask[i] || !allowed(i)) continue;
+        const x = i % W;
+        if ((x > 0 && mask[i - 1]) || (x < W - 1 && mask[i + 1]) || mask[i - W] || mask[i + W]) add.push(i);
+      }
+      for (const i of add) mask[i] = 1;
+    };
+    if (la) for (let n = 0; n < 3; n++) grow((i) => la[i] > 20);
+    grow(() => true);
+
+    checkpoint(new ImageData(new Uint8ClampedArray(d), W, H));
+    const [r, g, b] = hexToRgb(color);
+    const pat = PATTERNS[patternIndex];
+    for (let i = 0; i < W * H; i++) {
+      if (!mask[i]) continue;
+      const on = patternBit(pat, Math.floor((i % W) / CELL), Math.floor(i / W / CELL));
+      d[i * 4] = on ? r : 255;
+      d[i * 4 + 1] = on ? g : 255;
+      d[i * 4 + 2] = on ? b : 255;
+      d[i * 4 + 3] = 255;
+    }
+    pctx.putImageData(img, 0, 0);
+  }
+
+  function pickColor(p: Point) {
+    const [r, g, b] = pctx.getImageData(Math.floor(p.x), Math.floor(p.y), 1, 1).data;
+    setColor('#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1));
+    setTool(previousTool);
+  }
+
+  function placeText(p: Point) {
+    const fontSize = TEXT_SIZES[sizeIndex];
+    const r = overlay.getBoundingClientRect();
+    const scale = r.width / W;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'mp-text-input';
+    input.setAttribute('aria-label', 'Type text, then press Enter');
+    input.style.left = `${p.x * scale}px`;
+    input.style.top = `${p.y * scale}px`;
+    input.style.fontSize = `${fontSize * scale}px`;
+    input.style.color = color;
+    stage.append(input);
+
+    let done = false;
+    const finish = (commit: boolean) => {
+      if (done) return;
+      done = true;
+      if (commit && input.value.trim()) {
+        checkpoint();
+        pctx.font = `600 ${fontSize}px Fredoka, "Arial Rounded MT Bold", sans-serif`;
+        pctx.fillStyle = inkFor(pctx);
+        pctx.textBaseline = 'top';
+        pctx.fillText(input.value, p.x, p.y);
+      }
+      input.remove();
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') finish(true);
+      if (e.key === 'Escape') finish(false);
+    });
+    input.addEventListener('blur', () => finish(true));
+    // Focus after the pointer's own focus handling has finished.
+    setTimeout(() => input.focus(), 0);
+  }
+
+  let drawing = false;
+  let start: Point = { x: 0, y: 0 };
+  let last: Point = { x: 0, y: 0 };
+  let sprayTimer: number | undefined;
+
+  overlay.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const p = toCanvas(e);
+    if (tool === 'bucket') return floodFill(p);
+    if (tool === 'picker') return pickColor(p);
+    if (tool === 'text') return placeText(p);
+
+    overlay.setPointerCapture(e.pointerId);
+    drawing = true;
+    start = last = p;
+    checkpoint();
+    if (tool === 'brush' || tool === 'pencil' || tool === 'eraser') strokeSegment(p, p);
+    if (tool === 'spray') {
+      spray(p);
+      sprayTimer = window.setInterval(() => spray(last), 30);
+    }
+  });
+
+  overlay.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    const p = toCanvas(e);
+    if (tool === 'brush' || tool === 'pencil' || tool === 'eraser') {
+      strokeSegment(last, p);
+    } else if (tool === 'spray') {
+      spray(p);
+    } else {
+      octx.clearRect(0, 0, W, H);
+      drawShape(octx, start, constrain(start, p, e.shiftKey));
+    }
+    last = p;
+  });
+
+  const endStroke = (e: PointerEvent) => {
+    if (!drawing) return;
+    drawing = false;
+    window.clearInterval(sprayTimer);
+    if (['line', 'rect', 'rect-fill', 'oval', 'oval-fill'].includes(tool)) {
+      octx.clearRect(0, 0, W, H);
+      drawShape(pctx, start, constrain(start, toCanvas(e), e.shiftKey));
+    }
+  };
+  overlay.addEventListener('pointerup', endStroke);
+  overlay.addEventListener('pointercancel', endStroke);
+
+  // ---------- File menu ----------
+
+  function composite() {
+    const c = document.createElement('canvas');
+    c.width = W;
+    c.height = H;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(paint, 0, 0);
+    if (showLines) ctx.drawImage(lines, 0, 0);
+    return c;
+  }
+
+  function save() {
+    composite().toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mbg-masterpiece.png';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  }
+
+  function print() {
+    const src = composite().toDataURL('image/png');
+    const win = window.open('', '_blank', 'width=900,height=1100');
+    if (!win) {
+      alert('Please allow pop-ups to print your drawing.');
+      return;
+    }
+    win.document.write(`<!doctype html>
 <html>
   <head>
     <title>Money Back Guarantee* Coloring Page</title>
@@ -56,17 +677,410 @@ const pages = [
     <img src="${src}" alt="Coloring page" onload="window.focus(); window.print(); window.onafterprint = () => window.close();" />
   </body>
 </html>`);
-      win.document.close();
-    });
+    win.document.close();
+  }
+
+  const actions: Record<string, () => void> = { undo, redo, clear: clearAll, save, print };
+  $$<HTMLButtonElement>('[data-action]').forEach((btn) =>
+    btn.addEventListener('click', () => actions[btn.dataset.action!]()),
+  );
+
+  // ---------- Keyboard ----------
+
+  const toolKeys: Record<string, string> = {
+    t: 'text', k: 'bucket', s: 'spray', b: 'brush', p: 'pencil',
+    l: 'line', e: 'eraser', i: 'picker', r: 'rect', o: 'oval',
+  };
+
+  document.addEventListener('keydown', (e) => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
+    const key = e.key.toLowerCase();
+    if (e.metaKey || e.ctrlKey) {
+      if (key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (key === 'y') {
+        e.preventDefault();
+        redo();
+      } else if (key === 's') {
+        e.preventDefault();
+        save();
+      }
+      return;
+    }
+    if (e.altKey) return;
+    if (toolKeys[key]) setTool(toolKeys[key]);
   });
+
+  setTool(tool);
+  setSize(sizeIndex);
+  setColor(color);
+  loadSheet();
 </script>
 
 <style>
-  .coloring-page {
-    margin-bottom: 3rem;
+  .macpaint {
+    --mp-ink: #000;
+    position: relative;
+    left: 50%;
+    width: min(1080px, calc(100vw - 2rem));
+    transform: translateX(-50%);
+    margin-bottom: 1.5rem;
+    background: #fff;
+    color: var(--mp-ink);
+    border: 2px solid var(--mp-ink);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85);
+    font-family: "Chicago", "ChicagoFLF", "Charcoal", var(--font-display);
+    font-size: 0.95rem;
+    line-height: 1.2;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  .print-btn {
-    margin-top: 0.5rem;
+  /* Pinstriped title bar with a close box. */
+  .mp-titlebar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 4px 6px;
+    border-bottom: 2px solid var(--mp-ink);
+    background: repeating-linear-gradient(var(--mp-ink) 0 1.5px, #fff 1.5px 3px) content-box;
+  }
+
+  .mp-closebox {
+    position: absolute;
+    left: 14px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border: 1.5px solid var(--mp-ink);
+    box-shadow: 0 0 0 3px #fff;
+  }
+
+  .mp-title {
+    padding: 0 0.6rem;
+    background: #fff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .mp-menubar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.35rem;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 2px solid var(--mp-ink);
+  }
+
+  .mp-menubar button {
+    font: inherit;
+    color: inherit;
+    background: #fff;
+    border: 0;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+  }
+
+  .mp-menubar button:hover:not(:disabled),
+  .mp-menubar button:focus-visible {
+    background: var(--mp-ink);
+    color: #fff;
+    outline: none;
+  }
+
+  .mp-menubar button:disabled {
+    color: #999;
+    cursor: default;
+  }
+
+  .mp-sep {
+    width: 1px;
+    align-self: stretch;
+    background: var(--mp-ink);
+    margin: 0 0.25rem;
+  }
+
+  .mp-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0 0.35rem;
+  }
+
+  .mp-field select {
+    font: inherit;
+    color: inherit;
+    background: #fff;
+    border: 1.5px solid var(--mp-ink);
+    border-radius: 0;
+    padding: 0.1rem 0.25rem;
+    box-shadow: 2px 2px 0 var(--mp-ink);
+  }
+
+  .mp-field input[type="checkbox"] {
+    accent-color: var(--mp-ink);
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+  }
+
+  .mp-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.6rem;
+    padding: 0.6rem;
+  }
+
+  .mp-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .mp-tools {
+    display: grid;
+    grid-template-columns: repeat(2, 42px);
+    border: 1.5px solid var(--mp-ink);
+    gap: 1px;
+    background: var(--mp-ink);
+  }
+
+  .mp-tools button,
+  .mp-sizes button {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    color: var(--mp-ink);
+    cursor: pointer;
+  }
+
+  .mp-tools button {
+    height: 38px;
+  }
+
+  .mp-tools button[aria-checked="true"] {
+    background: var(--mp-ink);
+    color: #fff;
+  }
+
+  .mp-tools button:focus-visible,
+  .mp-sizes button:focus-visible,
+  .mp-patterns button:focus-visible,
+  .mp-colors button:focus-visible {
+    outline: 2px dashed var(--orange);
+    outline-offset: -4px;
+  }
+
+  .mp-sizes {
+    display: flex;
+    flex-direction: column;
+    border: 1.5px solid var(--mp-ink);
+  }
+
+  .mp-sizes button {
+    height: 22px;
+  }
+
+  .mp-sizes button::before {
+    content: "";
+    width: 70%;
+    height: var(--h);
+    background: var(--mp-ink);
+  }
+
+  .mp-sizes button[aria-checked="true"] {
+    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3.5px var(--mp-ink);
+  }
+
+  .mp-stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border: 1.5px solid var(--mp-ink);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .mp-stage canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mp-stage canvas[hidden] {
+    display: none;
+  }
+
+  #mp-overlay {
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  .mp-stage[data-tool="text"] #mp-overlay {
+    cursor: text;
+  }
+
+  .mp-stage :global(.mp-text-input) {
+    position: absolute;
+    min-width: 8ch;
+    margin: 0;
+    padding: 0;
+    border: 1px dashed var(--mp-ink);
+    background: transparent;
+    font-family: Fredoka, "Arial Rounded MT Bold", sans-serif;
+    font-weight: 600;
+    line-height: 1;
+    outline: none;
+  }
+
+  .mp-palette {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem;
+    border-top: 2px solid var(--mp-ink);
+  }
+
+  .mp-current {
+    width: 72px;
+    height: 48px;
+    border: 1.5px solid var(--mp-ink);
+    box-shadow: 3px 3px 0 var(--mp-ink);
+  }
+
+  .mp-patterns {
+    display: grid;
+    grid-template-columns: repeat(7, 32px);
+    gap: 1px;
+    border: 1.5px solid var(--mp-ink);
+    background: var(--mp-ink);
+  }
+
+  .mp-patterns button {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .mp-patterns canvas {
+    display: block;
+    width: 32px;
+    height: 20px;
+  }
+
+  .mp-patterns button[aria-checked="true"] {
+    outline: 3px solid var(--mp-ink);
+    outline-offset: -3px;
+    box-shadow: inset 0 0 0 4.5px #fff;
+    position: relative;
+  }
+
+  .mp-patterns button[aria-checked="true"] canvas {
+    clip-path: inset(4px);
+  }
+
+  .mp-colors {
+    display: grid;
+    grid-template-columns: repeat(12, 24px);
+    gap: 3px;
+  }
+
+  .mp-colors button,
+  .mp-custom {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1.5px solid var(--mp-ink);
+    cursor: pointer;
+  }
+
+  .mp-colors button[aria-checked="true"] {
+    box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--mp-ink);
+  }
+
+  .mp-custom {
+    position: relative;
+    overflow: hidden;
+    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+  }
+
+  .mp-custom input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .mp-tips {
+    font-size: 0.95rem;
+  }
+
+  .mp-tips kbd {
+    font-family: inherit;
+    font-size: 0.85em;
+    padding: 0 0.3em;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 720px) {
+    .mp-body {
+      grid-template-columns: 1fr;
+    }
+
+    .mp-side {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .mp-tools {
+      grid-template-columns: repeat(6, 42px);
+    }
+
+    .mp-sizes {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .mp-sizes button {
+      width: 38px;
+      height: auto;
+      min-height: 38px;
+    }
+
+    .mp-sizes button::before {
+      width: 70%;
+    }
+
+    .mp-colors {
+      grid-template-columns: repeat(8, 28px);
+    }
+
+    .mp-colors button,
+    .mp-custom {
+      width: 28px;
+      height: 28px;
+    }
   }
 </style>
