@@ -82,7 +82,43 @@ const clay = `
   <feComposite in="lit" in2="SourceAlpha" operator="in" />
 `;
 
+/*
+ * Modelling clay for the bandmates themselves: the outline wobbles as if
+ * squished by hand, the shape swells into a soft rounded volume, and
+ * lumps from big to small are pressed into its surface. Matte, with only a
+ * faint sheen on the shoulders.
+ */
+function sculpt(round: number, warp: number) {
+  return `
+  <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="1" seed="4" result="warpNoise" />
+  <feDisplacementMap in="SourceGraphic" in2="warpNoise" scale="${warp}" xChannelSelector="R" yChannelSelector="G" result="shape" />
+  <feGaussianBlur in="shape" stdDeviation="${round}" result="blur" />
+  <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="9" result="lumps" />
+  <feComposite in="blur" in2="lumps" operator="arithmetic" k2="1" k3="0.3" result="height" />
+  <feDiffuseLighting in="height" surfaceScale="${round * 1.4}" diffuseConstant="1" lighting-color="#fff" result="diffuse">
+    <feDistantLight azimuth="225" elevation="50" />
+  </feDiffuseLighting>
+  <feComposite in="shape" in2="diffuse" operator="arithmetic" k1="1.22" result="shaded" />
+  <feSpecularLighting in="height" surfaceScale="${round * 1.4}" specularConstant="0.3" specularExponent="9" lighting-color="#fff" result="spec">
+    <feDistantLight azimuth="225" elevation="45" />
+  </feSpecularLighting>
+  <feComposite in="spec" in2="shape" operator="in" result="specIn" />
+  <feComposite in="shaded" in2="specIn" operator="arithmetic" k2="1" k3="0.35" result="lit" />
+  <feComposite in="lit" in2="shape" operator="in" />
+`;
+}
+
+/** Lighter shade of a clay color, for the lit lip of a carved groove. */
+function light(hex: string, amount = 0.35): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift: number) => Math.round(((n >> shift) & 255) + (255 - ((n >> shift) & 255)) * amount);
+  return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
+}
+
 const F = 'url(#clay)';
+/** The bandmates' own clay: chunky body, smaller bits for faces and hands. */
+const BODY = 'url(#clay-body)';
+const BIT = 'url(#clay-bit)';
 ---
 
 <section class="bab" aria-label="Build-a-Bandmate">
@@ -93,7 +129,9 @@ const F = 'url(#clay)';
         Bounding boxes leave out stroke width, so the noodle arms (thick
         strokes) get a fixed region covering everywhere a hand can reach.
       -->
-      <filter id="clay-arm" filterUnits="userSpaceOnUse" x="10" y="120" width="180" height="130" color-interpolation-filters="sRGB" set:html={clay} />
+      <filter id="clay-arm" filterUnits="userSpaceOnUse" x="10" y="100" width="180" height="150" color-interpolation-filters="sRGB" set:html={sculpt(3.5, 3)} />
+      <filter id="clay-body" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB" set:html={sculpt(7, 6)} />
+      <filter id="clay-bit" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB" set:html={sculpt(2.5, 1.5)} />
 
       <!-- Instruments are drawn around their own origin; see PLACEMENTS in the script. -->
       <g id="inst-electric">
@@ -201,7 +239,6 @@ const F = 'url(#clay)';
     <div class="bab-floor" aria-hidden="true"></div>
     <ul class="bab-band" role="list">
       {members.map((m, i) => {
-        const clayDeep = deep(m.clay);
         const top = tops[m.top];
         return (
           <li>
@@ -209,14 +246,14 @@ const F = 'url(#clay)';
               <svg viewBox="0 0 200 320" aria-hidden="true" focusable="false" style={`--blink-delay: ${-i * 1.7}s`}>
                 <ellipse cx="100" cy="306" rx="64" ry="9" fill="rgba(70, 40, 20, 0.2)" />
                 <g class="bab-body">
-                  <g filter={F} fill={m.clay}>
-                    <path d={blobPath} stroke={clayDeep} stroke-width="2.5" />
+                  <g filter={BODY} fill={m.clay}>
+                    <path d={blobPath} />
                     {top && <path d={top} />}
                   </g>
                   {m.top === 'cap' && m.cap && (
-                    <g filter={F}>
-                      <path d="M60 68 C58 36 78 20 100 20 C122 20 142 36 140 68 Z" fill={m.cap[0]} stroke={deep(m.cap[0], 0.2)} stroke-width="2" />
-                      <path d="M57 63 C80 55 126 55 153 65 C156 72 143 74 137 71 C118 67 84 67 62 71 C54 71 52 65 57 63 Z" fill={m.cap[1]} stroke={deep(m.cap[1])} stroke-width="2" />
+                    <g filter={BIT}>
+                      <path d="M60 68 C58 36 78 20 100 20 C122 20 142 36 140 68 Z" fill={m.cap[0]} />
+                      <path d="M57 63 C80 55 126 55 153 65 C156 72 143 74 137 71 C118 67 84 67 62 71 C54 71 52 65 57 63 Z" fill={m.cap[1]} />
                       <circle cx="100" cy="21" r="3.5" fill={m.cap[1]} />
                     </g>
                   )}
@@ -224,14 +261,18 @@ const F = 'url(#clay)';
                     <text x="100" y="52" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="13" fill={m.cap[1]}>MBG*</text>
                   )}
                   <g class="bab-eyes">
-                    <ellipse cx="88" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
-                    <ellipse cx="112" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
+                    <ellipse filter={BIT} cx="88" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" />
+                    <ellipse filter={BIT} cx="112" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" />
                     <circle cx="90" cy="83" r="4.5" fill="#2e1f16" />
                     <circle cx="110" cy="83" r="4.5" fill="#2e1f16" />
                   </g>
-                  {m.top !== 'cap' && <path filter={F} d="M77 66 Q88 58 97 64 M103 64 Q112 58 123 66" fill="none" stroke={m.clay} stroke-width="6" stroke-linecap="round" />}
-                  <ellipse filter={F} cx="100" cy="96" rx="6" ry="5" fill={m.clay} stroke={clayDeep} stroke-width="1" />
-                  <path class="bab-smile" d="M84 108 Q100 120 116 108" fill="none" stroke="#5a1f14" stroke-width="3" stroke-linecap="round" />
+                  {m.top !== 'cap' && <path filter={BIT} d="M77 66 Q88 58 97 64 M103 64 Q112 58 123 66" fill="none" stroke={m.clay} stroke-width="6" stroke-linecap="round" />}
+                  <ellipse filter={BIT} cx="100" cy="96" rx="6.5" ry="5.5" fill={m.clay} />
+                  {/* The smile is a groove pressed into the clay: dark in the cut, catching light on its lower lip. */}
+                  <g class="bab-smile" fill="none" stroke-linecap="round">
+                    <path d="M84 110 Q100 122 116 110" stroke={light(m.clay, 0.3)} stroke-width="3" opacity="0.7" />
+                    <path d="M84 108 Q100 120 116 108" stroke={deep(m.clay, 0.5)} stroke-width="3.2" />
+                  </g>
                   <ellipse class="bab-sing" cx="100" cy="112" rx="8" ry="2" fill="#5a1f14" visibility="hidden" />
                 </g>
                 <g class="bab-inst"><use href="" visibility="hidden" /></g>
@@ -239,11 +280,10 @@ const F = 'url(#clay)';
                   {[0, 1].map(() => (
                     <g class="bab-arm">
                       <g filter="url(#clay-arm)">
-                        <path class="bab-arm-out" fill="none" stroke={clayDeep} stroke-width="16" stroke-linecap="round" />
-                        <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="12.5" stroke-linecap="round" />
+                        <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="14" stroke-linecap="round" />
                       </g>
                       <line class="bab-stick" stroke="#c98a5a" stroke-width="4" stroke-linecap="round" visibility="hidden" />
-                      <ellipse class="bab-hand" rx="10" ry="9" fill={m.clay} stroke={clayDeep} stroke-width="2" filter={F} />
+                      <ellipse class="bab-hand" rx="10.5" ry="9.5" fill={m.clay} filter={BIT} />
                     </g>
                   ))}
                 </g>
@@ -807,7 +847,7 @@ const F = 'url(#clay)';
     instG: SVGGElement;
     use: SVGUseElement;
     arm: [Arm, Arm];
-    smile: SVGPathElement;
+    smile: SVGGElement;
     sing: SVGEllipseElement;
     inst: InstId | null;
     /** A little personality in how each one grooves. */
@@ -823,7 +863,7 @@ const F = 'url(#clay)';
 
   const players: Player[] = [...root.querySelectorAll<HTMLButtonElement>('.bab-player')].map((button, i) => {
     const arm = [...button.querySelectorAll<SVGGElement>('.bab-arm')].map((g) => ({
-      paths: [g.querySelector<SVGPathElement>('.bab-arm-out')!, g.querySelector<SVGPathElement>('.bab-arm-in')!],
+      paths: [g.querySelector<SVGPathElement>('.bab-arm-in')!],
       hand: g.querySelector<SVGEllipseElement>('.bab-hand')!,
       stick: g.querySelector<SVGLineElement>('.bab-stick')!,
     })) as [Arm, Arm];
@@ -834,7 +874,7 @@ const F = 'url(#clay)';
       instG: button.querySelector<SVGGElement>('.bab-inst')!,
       use: button.querySelector<SVGUseElement>('.bab-inst use')!,
       arm,
-      smile: button.querySelector<SVGPathElement>('.bab-smile')!,
+      smile: button.querySelector<SVGGElement>('.bab-smile')!,
       sing: button.querySelector<SVGEllipseElement>('.bab-sing')!,
       inst: null,
       squash: [0.05, 0.07, 0.04, 0.06, 0.08][i % 5],
