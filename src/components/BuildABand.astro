@@ -263,6 +263,7 @@ const F = 'url(#clay)';
     <button type="button" class="clay-button bab-shuffle">Shuffle</button>
     <button type="button" class="clay-button bab-clear">Clear</button>
   </div>
+  <div class="bab-now" aria-hidden="true"></div>
   <div class="bab-status" role="status" aria-live="polite">Pick an instrument and tap a bandmate, or drag it right onto them. Then hit Play.</div>
 </section>
 
@@ -442,6 +443,17 @@ const F = 'url(#clay)';
     color: var(--ink);
   }
 
+  /* Where the band is in the song: section and chord. */
+  .bab-now {
+    min-height: 1.4em;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
   .bab-status {
     min-height: 1.6em;
     text-align: center;
@@ -501,18 +513,17 @@ const F = 'url(#clay)';
   interface Pt { x: number; y: number }
 
   /**
-   * The song the band jams on: chord names and how many beats each lasts,
-   * looped. Every part is voiced from these names, so changing the song
-   * means changing this list.
+   * Wake Up Call, looped verse → chorus → bridge, one chord per bar. Every
+   * part is voiced from these chord names, so changing the song means
+   * changing this list.
    */
   const SONG = {
     bpm: 112,
-    chords: [
-      ['G', 4],
-      ['D', 4],
-      ['Em', 4],
-      ['C', 4],
-    ] as [string, number][],
+    sections: [
+      ['Verse', 'C F G G  C F G G'],
+      ['Chorus', 'Am G C F  Am G E7sus9 F  Am G C C'],
+      ['Bridge', 'C E7sus9 Am G  C E7sus9 Am G'],
+    ],
   };
 
   const INSTRUMENTS: InstId[] = ['piano', 'bass', 'electric', 'acoustic', 'banjo', 'drums'];
@@ -529,6 +540,8 @@ const F = 'url(#clay)';
     7: [0, 4, 7, 10], m7: [0, 3, 7, 10], maj7: [0, 4, 7, 11], M7: [0, 4, 7, 11],
     6: [0, 4, 7, 9], m6: [0, 3, 7, 9], 9: [0, 4, 7, 10, 14], add9: [0, 4, 7, 14],
     sus: [0, 5, 7], sus2: [0, 2, 7], sus4: [0, 5, 7], dim: [0, 3, 6], aug: [0, 4, 8],
+    // "sus9": the 9th stands in for the 3rd.
+    sus9: [0, 7, 14], '7sus2': [0, 2, 7, 10], '7sus4': [0, 5, 7, 10], '7sus9': [0, 7, 10, 14],
   };
 
   interface Voicing {
@@ -577,11 +590,13 @@ const F = 'url(#clay)';
 
   /** The chord under each sixteenth note of the loop, and where each new chord lands. */
   const CHART: Voicing[] = [];
-  const CHANGES = new Set<number>();
-  for (const [name, beats] of SONG.chords) {
-    const v = voice(name);
-    CHANGES.add(CHART.length);
-    for (let i = 0; i < beats * 4; i++) CHART.push(v);
+  const CHANGES = new Map<number, string>();
+  for (const [section, bars] of SONG.sections) {
+    for (const name of bars.split(/\s+/)) {
+      const v = voice(name);
+      CHANGES.set(CHART.length, `${section} · ${name}`);
+      for (let i = 0; i < 16; i++) CHART.push(v);
+    }
   }
   const LOOP = CHART.length;
   const STEP = 60 / SONG.bpm / 4;
@@ -702,6 +717,7 @@ const F = 'url(#clay)';
   const root = document.querySelector<HTMLElement>('.bab')!;
   const status = root.querySelector<HTMLElement>('.bab-status')!;
   const playBtn = root.querySelector<HTMLButtonElement>('.bab-play')!;
+  const now = root.querySelector<HTMLElement>('.bab-now')!;
   const trayBtns = [...root.querySelectorAll<HTMLButtonElement>('.bab-inst-btn')];
 
   const players: Player[] = [...root.querySelectorAll<HTMLButtonElement>('.bab-player')].map((button, i) => {
@@ -1057,9 +1073,14 @@ const F = 'url(#clay)';
   const band = new Band();
   let frame = 0;
 
+  let shown = '';
+
   function animate() {
     const s = band.position();
     for (const p of players) pose(p, s, true);
+    const step = Math.floor(wrap(s));
+    const label = CHANGES.get(step);
+    if (label && label !== shown) now.textContent = shown = label;
     frame = requestAnimationFrame(animate);
   }
 
@@ -1076,6 +1097,7 @@ const F = 'url(#clay)';
     } else {
       band.stop();
       cancelAnimationFrame(frame);
+      now.textContent = shown = '';
       for (const p of players) pose(p, 0, false);
     }
     playBtn.setAttribute('aria-pressed', String(on));
