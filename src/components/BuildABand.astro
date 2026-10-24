@@ -5,25 +5,22 @@
  * the parts somebody is holding.
  */
 
-type Top = 'slant' | 'peak' | 'curls' | 'flat' | 'cap';
+type Top = 'round' | 'slant' | 'peak' | 'flat' | 'cap';
 
 interface Member {
   name: string;
   /** Gumby-style: one lump of clay, head to toe. */
   clay: string;
   top: Top;
-  /** Hair, beard or cap colors, depending on the look. */
-  hair?: string;
+  /** Crown and brim colors, for top 'cap'. */
   cap?: [string, string];
-  beard?: boolean;
-  mustache?: boolean;
 }
 
 const members: Member[] = [
-  { name: 'Andy', clay: '#d9440d', top: 'peak', hair: '#5a3a22', mustache: true },
+  { name: 'Andy', clay: '#d9440d', top: 'peak' },
   { name: 'Ben', clay: '#ffd23f', top: 'cap', cap: ['#f2e4cc', '#0b7a72'] },
-  { name: 'Charlie', clay: '#0b9a8f', top: 'curls', hair: '#2e1f16' },
-  { name: 'John', clay: '#e8202a', top: 'flat', hair: '#5a3a22', beard: true },
+  { name: 'Charlie', clay: '#0b9a8f', top: 'round' },
+  { name: 'John', clay: '#e8202a', top: 'flat' },
   { name: 'Zach', clay: '#3b4cca', top: 'slant' },
 ];
 
@@ -56,9 +53,6 @@ const tops: Partial<Record<Top, string>> = {
   peak: 'M58 76 C56 44 64 22 78 14 C88 9 94 19 102 27 C122 30 140 46 142 72 Z',
   flat: 'M60 70 C60 48 62 34 70 32 L130 32 C138 34 140 48 140 70 Z',
 };
-const curls: [number, number, number][] = [[66, 64, 12], [78, 46, 15], [100, 38, 17], [122, 46, 15], [134, 64, 12]];
-const beardPath = 'M68 94 C70 120 86 134 100 134 C114 134 130 120 132 94 C124 108 112 115 100 115 C88 115 76 108 68 94 Z';
-const mustachePath = 'M84 104 C90 96 97 98 100 102 C103 98 110 96 116 104 C110 109 103 107 100 105 C97 107 90 109 84 104 Z';
 
 // 18 white keys; black keys sit after these white keys in each octave.
 const whiteKeys = Array.from({ length: 18 }, (_, i) => -74 + i * (148 / 18));
@@ -199,9 +193,6 @@ const F = 'url(#clay)';
                     <path d={blobPath} stroke={clayDeep} stroke-width="2.5" />
                     {top && <path d={top} />}
                   </g>
-                  {m.top === 'curls' && m.hair && (
-                    <g filter={F} fill={m.hair}>{curls.map(([cx, cy, r]) => <circle cx={cx} cy={cy} r={r} />)}</g>
-                  )}
                   {m.top === 'cap' && m.cap && (
                     <g filter={F}>
                       <path d="M60 68 C58 36 78 20 100 20 C122 20 142 36 140 68 Z" fill={m.cap[0]} stroke={deep(m.cap[0], 0.2)} stroke-width="2" />
@@ -212,7 +203,6 @@ const F = 'url(#clay)';
                   {m.top === 'cap' && m.cap && (
                     <text x="100" y="52" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="13" fill={m.cap[1]}>MBG*</text>
                   )}
-                  {m.beard && m.hair && <path filter={F} d={beardPath} fill={m.hair} />}
                   <g class="bab-eyes">
                     <ellipse cx="88" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
                     <ellipse cx="112" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
@@ -221,7 +211,6 @@ const F = 'url(#clay)';
                   </g>
                   {m.top !== 'cap' && <path filter={F} d="M77 66 Q88 58 97 64 M103 64 Q112 58 123 66" fill="none" stroke={m.clay} stroke-width="6" stroke-linecap="round" />}
                   <ellipse filter={F} cx="100" cy="96" rx="6" ry="5" fill={m.clay} stroke={clayDeep} stroke-width="1" />
-                  {m.mustache && m.hair && <path filter={F} d={mustachePath} fill={m.hair} />}
                   <path class="bab-smile" d="M84 108 Q100 120 116 108" fill="none" stroke="#5a1f14" stroke-width="3" stroke-linecap="round" />
                 </g>
                 <g class="bab-inst"><use href="" visibility="hidden" /></g>
