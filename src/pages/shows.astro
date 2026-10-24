@@ -67,18 +67,25 @@ const origin = Astro.url.origin;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 1.1rem;
   }
 
   .show-list li {
-    display: flex !important;
+    display: flex;
     gap: 1rem;
-    align-items: baseline;
+    align-items: center;
+    padding: 0.8rem 1rem 0.8rem 1.25rem;
   }
 
   .show-date {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--orange);
+    min-width: 9.5rem;
+  }
+
+  .show-name {
     font-weight: 700;
-    min-width: 8rem;
   }
 
   .show-detail {
@@ -86,19 +93,27 @@ const origin = Astro.url.origin;
   }
 
   .show-calendar {
+    --c: var(--teal);
+    --c-deep: var(--teal-deep);
     display: inline-flex;
-    color: var(--ink);
-    background: var(--paper);
-    padding: 0.3rem;
-    border: 2px solid var(--ink);
-    box-shadow: 3px 3px 0 #000;
-    transition: transform 60ms ease, box-shadow 60ms ease;
+    color: var(--cream);
+    background: var(--c);
+    padding: 0.4rem;
+    border-radius: 10px;
+    box-shadow:
+      inset 2px 2px 3px rgba(255, 255, 255, 0.35),
+      inset -2px -3px 4px rgba(0, 0, 0, 0.15),
+      0 3px 0 var(--c-deep);
+    transition: transform 120ms ease, box-shadow 120ms ease;
   }
 
   .show-calendar:hover,
   .show-calendar:focus-visible {
-    transform: translate(3px, 3px);
-    box-shadow: 0 0 0 #000;
+    transform: translateY(3px) scale(1.05, 0.95);
+    box-shadow:
+      inset 2px 2px 3px rgba(255, 255, 255, 0.35),
+      inset -2px -3px 4px rgba(0, 0, 0, 0.15),
+      0 0 0 var(--c-deep);
   }
 
   .show-calendar svg {
