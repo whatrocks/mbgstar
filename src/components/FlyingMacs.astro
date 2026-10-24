@@ -7,7 +7,7 @@ const macs = Array.from({ length: COUNT }, (_, i) => {
   const endY = startY + deltaY;
   const duration = 16 + Math.random() * 22;
   const delay = -Math.random() * duration;
-  const opacity = 0.45 + Math.random() * 0.4;
+  const opacity = 0.6 + Math.random() * 0.35;
   const rotate = -20 + Math.random() * 40;
   const wobbleAmount = 14 + Math.random() * 24;
   const wobbleDuration = 1.8 + Math.random() * 3.2;
@@ -57,7 +57,7 @@ const keyframesCSS = macs
       style={`--start-y:${m.startY}vh;--end-y:${m.endY}vh;--dur:${m.duration}s;--delay:${m.delay}s;`}
     >
       <img
-        src="/mbg-mac.png"
+        src="/clay-mac.webp"
         alt=""
         loading="lazy"
         decoding="async"

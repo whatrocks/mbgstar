@@ -18,6 +18,15 @@
 
   --radius: 18px;
   --lift: 6px;
+  /* Hand-pressed, never perfectly round. */
+  --blob: 22px 15px 24px 13px / 15px 22px 13px 24px;
+
+  /*
+   * Lumpy clay relief: fractal noise lit from the top left, centered on
+   * mid-gray so a soft-light blend dents and highlights without shifting
+   * the clay's base color.
+   */
+  --clay-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='c' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeDiffuseLighting lighting-color='%23fff' surfaceScale='2.4'%3E%3CfeDistantLight azimuth='225' elevation='58'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.1' intercept='-0.42'/%3E%3CfeFuncG type='linear' slope='1.1' intercept='-0.42'/%3E%3CfeFuncB type='linear' slope='1.1' intercept='-0.42'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
 
   --font-display: "Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
   --font-body: "Nunito", "Trebuchet MS", system-ui, sans-serif;
@@ -68,10 +77,14 @@ h3 {
 /* ---------- Clay surfaces ---------- */
 
 /*
- * A lump of clay: rounded, lit from the top left, with a solid darker
- * "side" underneath and a soft contact shadow on the table.
+ * A lump of clay: textured, unevenly rounded, lit from the top left, with a
+ * solid darker "side" underneath and a soft contact shadow on the table.
+ * --press squashes it down onto the table.
  */
 .clay,
+.clay-button,
+.clay-frame,
+.image-stage:not(.image-stage--bare),
 .site-nav a,
 .social-links a,
 main p,
@@ -80,42 +93,40 @@ main h2,
 .site-footer h2 {
   --c: var(--cream);
   --c-deep: var(--cream-deep);
-  background: var(--c);
-  border-radius: var(--radius);
+  --press: 0px;
+  background: var(--clay-texture) 0 0 / 240px, var(--c);
+  background-blend-mode: soft-light, normal;
+  border-radius: var(--blob);
   box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.45),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.12),
-    0 var(--lift) 0 var(--c-deep),
-    0 calc(var(--lift) + 8px) 18px rgba(70, 40, 20, 0.22);
+    inset 3px 4px 6px rgba(255, 255, 255, 0.4),
+    inset -3px -5px 8px rgba(0, 0, 0, 0.14),
+    0 calc(var(--lift) - var(--press)) 0 var(--c-deep),
+    0 calc(var(--lift) - var(--press) + 8px) calc(18px - var(--press) * 2) rgba(70, 40, 20, 0.22);
 }
 
 /* Pressable clay squishes down onto the table. */
 .site-nav a,
 .social-links a,
 .clay-button {
+  transform: translateY(var(--press)) rotate(var(--tilt, 0deg)) scale(var(--squash, 1), calc(2 - var(--squash, 1)));
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
 .site-nav a:hover,
 .social-links a:hover,
+.clay-button:hover,
 .site-nav a:focus-visible,
-.social-links a:focus-visible {
-  transform: translateY(3px) rotate(var(--tilt, 0deg)) scale(1.03, 0.97);
-  box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.45),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.12),
-    0 3px 0 var(--c-deep),
-    0 8px 10px rgba(70, 40, 20, 0.22);
+.social-links a:focus-visible,
+.clay-button:focus-visible {
+  --press: 3px;
+  --squash: 1.03;
 }
 
 .site-nav a:active,
-.social-links a:active {
-  transform: translateY(var(--lift)) rotate(var(--tilt, 0deg)) scale(1.06, 0.92);
-  box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.45),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.12),
-    0 0 0 var(--c-deep),
-    0 3px 6px rgba(70, 40, 20, 0.22);
+.social-links a:active,
+.clay-button:active {
+  --press: var(--lift);
+  --squash: 1.07;
 }
 
 a:focus-visible,
@@ -175,7 +186,6 @@ button:focus-visible {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 0.45rem 1.05rem 0.4rem;
-  transform: rotate(var(--tilt, 0deg));
 }
 
 /* M-B-G: each tab is a different lump, leaning a little like the letters. */
@@ -183,12 +193,14 @@ button:focus-visible {
   --c: var(--orange);
   --c-deep: var(--orange-deep);
   --tilt: -2deg;
+  --blob: 20px 14px 22px 12px / 14px 20px 12px 22px;
 }
 
 .site-nav a:nth-child(3n + 2) {
   --c: var(--cream);
   --c-deep: var(--cream-deep);
   --tilt: 1.5deg;
+  --blob: 14px 22px 13px 20px / 20px 14px 22px 13px;
   color: var(--ink);
 }
 
@@ -196,10 +208,12 @@ button:focus-visible {
   --c: var(--teal);
   --c-deep: var(--teal-deep);
   --tilt: -1deg;
+  --blob: 24px 16px 18px 22px / 18px 24px 16px 14px;
 }
 
 .site-nav a:nth-child(4) {
   --tilt: 2deg;
+  --blob: 16px 24px 20px 14px / 22px 14px 24px 16px;
 }
 
 .site-nav a[aria-current="page"] {
@@ -211,34 +225,37 @@ button:focus-visible {
 
 main h1 {
   display: block;
-  margin: 0.25rem 0 1.5rem;
+  width: fit-content;
+  margin: 0.25rem auto 1.5rem;
   text-align: center;
   font-size: clamp(2rem, 8.5vw, 4.25rem);
   font-weight: 700;
   letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--orange);
-  /* Extruded clay letters, like the logo. */
-  text-shadow:
-    1px 1px 0 var(--orange-deep),
-    2px 2px 0 var(--orange-deep),
-    3px 3px 0 var(--orange-deep),
-    4px 5px 0 var(--orange-deep),
-    6px 12px 14px rgba(70, 40, 20, 0.28);
+  /* Letters cut from the same lumpy orange clay, extruded like the logo. */
+  background: var(--clay-texture) 0 0 / 240px, var(--orange);
+  background-blend-mode: soft-light, normal;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(1px 2px 0 var(--orange-deep))
+    drop-shadow(1px 2px 0 var(--orange-deep))
+    drop-shadow(1px 1px 0 var(--orange-deep))
+    drop-shadow(4px 10px 10px rgba(70, 40, 20, 0.28));
 }
 
+/* The clay asterisk from the logo. */
 main h1::after {
-  content: "*";
+  content: "";
   display: inline-block;
-  margin-left: 0.08em;
-  color: var(--teal);
-  font-size: 0.7em;
-  vertical-align: 0.55em;
+  width: 0.55em;
+  height: 0.55em;
+  margin-left: 0.06em;
+  vertical-align: 0.6em;
+  background: url("/clay-asterisk.webp") center / contain no-repeat;
   transform: rotate(14deg);
-  text-shadow:
-    1px 1px 0 var(--teal-deep),
-    2px 2px 0 var(--teal-deep),
-    3px 4px 0 var(--teal-deep);
 }
 
 main h2,
@@ -269,17 +286,23 @@ main p {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: calc(var(--radius) + 6px);
-  border: 6px solid var(--cream);
-  box-shadow:
-    0 var(--lift) 0 var(--cream-deep),
-    0 calc(var(--lift) + 10px) 22px rgba(70, 40, 20, 0.25);
+}
+
+/* A clay frame squeezed around a photo, video or embed. */
+.clay-frame,
+.image-stage:not(.image-stage--bare) {
+  padding: 9px;
+}
+
+.clay-frame > *,
+.image-stage:not(.image-stage--bare) img {
+  display: block;
+  border-radius: 14px 9px 15px 8px / 9px 14px 8px 15px;
+  box-shadow: inset 0 0 0 1px rgba(70, 40, 20, 0.15), 0 0 0 2px var(--cream-deep);
 }
 
 .image-stage--bare img {
-  border: none;
   border-radius: 50%;
-  box-shadow: none;
 }
 
 /* Generic chunky clay button. */
@@ -291,8 +314,6 @@ main p {
   gap: 0.5rem;
   border: none;
   color: var(--cream);
-  background: var(--c);
-  border-radius: 999px;
   padding: 0.6rem 1.25rem 0.55rem;
   font-family: var(--font-display);
   font-size: 1.05rem;
@@ -300,29 +321,6 @@ main p {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.35),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.15),
-    0 var(--lift) 0 var(--c-deep),
-    0 calc(var(--lift) + 8px) 16px rgba(70, 40, 20, 0.22);
-}
-
-.clay-button:hover {
-  transform: translateY(3px) scale(1.03, 0.97);
-  box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.35),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.15),
-    0 3px 0 var(--c-deep),
-    0 8px 10px rgba(70, 40, 20, 0.22);
-}
-
-.clay-button:active {
-  transform: translateY(var(--lift)) scale(1.06, 0.92);
-  box-shadow:
-    inset 3px 4px 6px rgba(255, 255, 255, 0.35),
-    inset -3px -5px 8px rgba(0, 0, 0, 0.15),
-    0 0 0 var(--c-deep),
-    0 3px 6px rgba(70, 40, 20, 0.22);
 }
 
 /* ---------- Footer ---------- */
@@ -342,7 +340,10 @@ main p {
   right: 0;
   height: 12px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--orange) 0 33.3%, var(--cream) 33.3% 66.6%, var(--teal) 66.6%);
+  background:
+    var(--clay-texture) 0 0 / 240px,
+    linear-gradient(90deg, var(--orange) 0 33.3%, var(--cream) 33.3% 66.6%, var(--teal) 66.6%);
+  background-blend-mode: soft-light, normal;
   box-shadow:
     inset 0 3px 3px rgba(255, 255, 255, 0.45),
     inset 0 -3px 4px rgba(0, 0, 0, 0.18),
@@ -368,12 +369,16 @@ main p {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: 0.45rem 0.95rem 0.4rem;
-  border-radius: 999px;
+}
+
+.social-links a:nth-child(2n) {
+  --blob: 15px 22px 13px 24px / 22px 15px 24px 13px;
 }
 
 .social-links svg {
   display: block;
   color: var(--orange);
+  filter: drop-shadow(0 1.5px 0 rgba(70, 40, 20, 0.35));
 }
 
 .social-links a:nth-child(2n) svg {
@@ -381,19 +386,12 @@ main p {
 }
 
 .mailing-list {
-  display: block;
   overflow: hidden;
-  border-radius: calc(var(--radius) + 6px);
-  border: 6px solid var(--cream);
-  background: var(--paper);
-  box-shadow:
-    0 var(--lift) 0 var(--cream-deep),
-    0 calc(var(--lift) + 10px) 22px rgba(70, 40, 20, 0.22);
 }
 
 .mailing-list iframe {
-  display: block;
   border: 0;
+  background: var(--paper);
 }
 
 /* ---------- Music mode (space + M) ---------- */
