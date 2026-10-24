@@ -5,27 +5,26 @@
  * the parts somebody is holding.
  */
 
-type HairStyle = 'short' | 'buzz' | 'wavy' | 'swoop' | 'cap';
+type Top = 'slant' | 'peak' | 'curls' | 'flat' | 'cap';
 
 interface Member {
   name: string;
-  skin: string;
-  hair: string;
-  hairStyle: HairStyle;
-  beard?: 'full' | 'stubble';
-  /** Cap crown and brim, for hairStyle 'cap'. */
+  /** Gumby-style: one lump of clay, head to toe. */
+  clay: string;
+  top: Top;
+  /** Hair, beard or cap colors, depending on the look. */
+  hair?: string;
   cap?: [string, string];
-  shirt: string;
-  pants: string;
-  shoes: string;
+  beard?: boolean;
+  mustache?: boolean;
 }
 
 const members: Member[] = [
-  { name: 'Andy', skin: '#f1c9a5', hair: '#5a3a22', hairStyle: 'short', beard: 'stubble', shirt: '#d9440d', pants: '#3a4f8f', shoes: '#2e1f16' },
-  { name: 'Ben', skin: '#efc29c', hair: '#3a2618', hairStyle: 'cap', cap: ['#f2e4cc', '#0b7a72'], shirt: '#f2e4cc', pants: '#7a6a58', shoes: '#f4f0e8' },
-  { name: 'Charlie', skin: '#f3cfae', hair: '#2e1f16', hairStyle: 'wavy', shirt: '#0b7a72', pants: '#4a4a4a', shoes: '#9e2f06' },
-  { name: 'John', skin: '#dba27a', hair: '#4a3020', hairStyle: 'buzz', beard: 'full', shirt: '#4a4a4a', pants: '#3a4f8f', shoes: '#f4f0e8' },
-  { name: 'Zach', skin: '#f1c9a5', hair: '#8a5a32', hairStyle: 'swoop', shirt: '#3b4cca', pants: '#7a6a58', shoes: '#2e1f16' },
+  { name: 'Andy', clay: '#d9440d', top: 'peak', hair: '#5a3a22', mustache: true },
+  { name: 'Ben', clay: '#ffd23f', top: 'cap', cap: ['#f2e4cc', '#0b7a72'] },
+  { name: 'Charlie', clay: '#0b9a8f', top: 'curls', hair: '#2e1f16' },
+  { name: 'John', clay: '#e8202a', top: 'flat', hair: '#5a3a22', beard: true },
+  { name: 'Zach', clay: '#3b4cca', top: 'slant' },
 ];
 
 const instruments = [
@@ -44,13 +43,22 @@ function deep(hex: string, amount = 0.32): string {
   return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
 }
 
-const hairPaths: Record<Exclude<HairStyle, 'cap'>, string> = {
-  short: 'M70 76 C66 50 82 40 100 40 C120 40 134 50 130 76 C127 64 120 57 108 58 C100 52 88 56 82 60 C76 63 72 68 70 76 Z',
-  buzz: 'M71 70 C70 50 84 43 100 43 C116 43 130 50 129 70 C122 58 112 54 100 54 C88 54 78 58 71 70 Z',
-  wavy: 'M68 86 C60 66 66 46 80 42 C86 34 104 32 112 38 C126 36 138 50 134 66 C138 74 134 84 130 88 C130 74 126 64 118 60 C110 64 96 62 88 58 C80 64 72 72 70 88 Z',
-  swoop: 'M70 78 C64 52 80 38 102 39 C122 40 136 54 130 74 C126 66 122 62 116 60 C104 66 88 66 76 60 C72 66 71 72 70 78 Z',
+/** Head to feet in one piece: big head, no neck to speak of, stubby legs that flare into feet. */
+const blobPath =
+  'M100 40 C124 40 142 56 142 84 C142 106 132 120 122 127 C128 132 132 140 134 150 L140 234 ' +
+  'C142 256 144 276 150 288 C155 300 146 306 130 304 L112 302 C108 300 106 290 106 278 ' +
+  'C105 262 102 252 100 250 C98 252 95 262 94 278 C94 290 92 300 88 302 L70 304 ' +
+  'C54 306 45 300 50 288 C56 276 58 256 60 234 L66 150 C68 140 72 132 78 127 C68 120 58 106 58 84 C58 56 76 40 100 40 Z';
+
+/** Shapes pressed onto the top of the head, same clay as the body. */
+const tops: Partial<Record<Top, string>> = {
+  slant: 'M60 74 C58 44 74 28 94 25 C110 22 122 14 133 7 C142 2 147 11 145 22 C143 44 142 60 142 76 Z',
+  peak: 'M58 76 C56 44 64 22 78 14 C88 9 94 19 102 27 C122 30 140 46 142 72 Z',
+  flat: 'M60 70 C60 48 62 34 70 32 L130 32 C138 34 140 48 140 70 Z',
 };
-const beardPath = 'M70 80 C70 104 84 117 100 117 C116 117 130 104 130 80 C126 92 116 101 100 101 C84 101 74 92 70 80 Z';
+const curls: [number, number, number][] = [[66, 64, 12], [78, 46, 15], [100, 38, 17], [122, 46, 15], [134, 64, 12]];
+const beardPath = 'M68 94 C70 120 86 134 100 134 C114 134 130 120 132 94 C124 108 112 115 100 115 C88 115 76 108 68 94 Z';
+const mustachePath = 'M84 104 C90 96 97 98 100 102 C103 98 110 96 116 104 C110 109 103 107 100 105 C97 107 90 109 84 104 Z';
 
 // 18 white keys; black keys sit after these white keys in each octave.
 const whiteKeys = Array.from({ length: 18 }, (_, i) => -74 + i * (148 / 18));
@@ -85,11 +93,10 @@ const F = 'url(#clay)';
     <defs>
       <filter id="clay" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB" set:html={clay} />
       <!--
-        Bounding boxes leave out stroke width, so the noodle limbs (thick
-        strokes) get fixed regions covering everywhere an arm or leg can reach.
+        Bounding boxes leave out stroke width, so the noodle arms (thick
+        strokes) get a fixed region covering everywhere a hand can reach.
       -->
-      <filter id="clay-arm" filterUnits="userSpaceOnUse" x="15" y="104" width="170" height="130" color-interpolation-filters="sRGB" set:html={clay} />
-      <filter id="clay-leg" filterUnits="userSpaceOnUse" x="64" y="184" width="72" height="120" color-interpolation-filters="sRGB" set:html={clay} />
+      <filter id="clay-arm" filterUnits="userSpaceOnUse" x="10" y="120" width="180" height="130" color-interpolation-filters="sRGB" set:html={clay} />
 
       <!-- Instruments are drawn around their own origin; see PLACEMENTS in the script. -->
       <g id="inst-electric">
@@ -180,73 +187,53 @@ const F = 'url(#clay)';
     <div class="bab-floor" aria-hidden="true"></div>
     <ul class="bab-band" role="list">
       {members.map((m, i) => {
-        const skinDeep = deep(m.skin, 0.22);
-        const shirtDeep = deep(m.shirt);
+        const clayDeep = deep(m.clay);
+        const top = tops[m.top];
         return (
           <li>
             <button type="button" class="bab-player" data-player={i} data-name={m.name} aria-label={`${m.name}: empty-handed`}>
               <svg viewBox="0 0 200 320" aria-hidden="true" focusable="false" style={`--blink-delay: ${-i * 1.7}s`}>
                 <ellipse cx="100" cy="306" rx="64" ry="9" fill="rgba(70, 40, 20, 0.2)" />
                 <g class="bab-body">
-                  <g stroke={m.pants} stroke-width="24" stroke-linecap="round" filter="url(#clay-leg)">
-                    <path d="M88 198 L84 290" />
-                    <path d="M112 198 L116 290" />
+                  <g filter={F} fill={m.clay}>
+                    <path d={blobPath} stroke={clayDeep} stroke-width="2.5" />
+                    {top && <path d={top} />}
                   </g>
-                  <g fill={m.shoes} stroke={deep(m.shoes, 0.25)} stroke-width="2" filter={F}>
-                    <ellipse cx="80" cy="297" rx="17" ry="9" />
-                    <ellipse cx="120" cy="297" rx="17" ry="9" />
-                  </g>
-                  <path filter={F} d="M68 126 C70 114 86 110 100 110 C114 110 130 114 132 126 L138 196 C138 206 120 212 100 212 C80 212 62 206 62 196 Z" fill={m.shirt} stroke={shirtDeep} stroke-width="2.5" />
-                  <path d="M90 112 L100 124 L110 112" fill="none" stroke={shirtDeep} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                  <g class="bab-head">
-                    <g fill={m.skin} stroke={skinDeep} stroke-width="2" filter={F}>
-                      <rect x="91" y="100" width="18" height="16" rx="6" />
-                      <circle cx="70" cy="80" r="7" />
-                      <circle cx="130" cy="80" r="7" />
-                      <ellipse cx="100" cy="78" rx="30" ry="33" />
+                  {m.top === 'curls' && m.hair && (
+                    <g filter={F} fill={m.hair}>{curls.map(([cx, cy, r]) => <circle cx={cx} cy={cy} r={r} />)}</g>
+                  )}
+                  {m.top === 'cap' && m.cap && (
+                    <g filter={F}>
+                      <path d="M60 68 C58 36 78 20 100 20 C122 20 142 36 140 68 Z" fill={m.cap[0]} stroke={deep(m.cap[0], 0.2)} stroke-width="2" />
+                      <path d="M57 63 C80 55 126 55 153 65 C156 72 143 74 137 71 C118 67 84 67 62 71 C54 71 52 65 57 63 Z" fill={m.cap[1]} stroke={deep(m.cap[1])} stroke-width="2" />
+                      <circle cx="100" cy="21" r="3.5" fill={m.cap[1]} />
                     </g>
-                    {m.beard && (
-                      <g filter={F} opacity={m.beard === 'stubble' ? 0.38 : 1}>
-                        <path d={beardPath} fill={m.hair} />
-                      </g>
-                    )}
-                    {m.hairStyle === 'cap' && m.cap ? (
-                      <g filter={F}>
-                        <path d="M68 70 C66 44 84 35 100 35 C118 35 134 44 132 70 Z" fill={m.cap[0]} stroke={deep(m.cap[0], 0.2)} stroke-width="2" />
-                        <path d="M66 67 C82 61 122 61 140 69 C143 75 133 77 128 74 C112 70 86 70 70 74 C63 74 61 69 66 67 Z" fill={m.cap[1]} stroke={deep(m.cap[1])} stroke-width="2" />
-                        <circle cx="100" cy="36" r="3" fill={m.cap[1]} />
-                      </g>
-                    ) : (
-                      <path filter={F} d={hairPaths[m.hairStyle as Exclude<HairStyle, 'cap'>]} fill={m.hair} stroke={deep(m.hair, 0.3)} stroke-width="1.5" />
-                    )}
-                    {m.hairStyle === 'cap' && m.cap && (
-                      <text x="100" y="60" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="11" fill={m.cap[1]}>MBG*</text>
-                    )}
-                    <g class="bab-eyes">
-                      <circle cx="89" cy="77" r="5.5" fill="#fffaf0" />
-                      <circle cx="111" cy="77" r="5.5" fill="#fffaf0" />
-                      <circle cx="90" cy="78" r="2.8" fill="#2e1f16" />
-                      <circle cx="110" cy="78" r="2.8" fill="#2e1f16" />
-                    </g>
-                    <path d="M83 67 Q89 64 95 67 M105 67 Q111 64 117 67" fill="none" stroke={deep(m.hair, 0.1)} stroke-width="2.5" stroke-linecap="round" />
-                    <ellipse cx="100" cy="87" rx="4.5" ry="3.5" fill={skinDeep} />
-                    {m.beard === 'full' && <path d="M89 93 Q100 88 111 93 Q100 96 89 93 Z" fill={deep(m.hair, 0.1)} />}
-                    <path class="bab-smile" d="M91 97 Q100 104 109 97" fill="none" stroke="#5a1f14" stroke-width="2.5" stroke-linecap="round" />
-                    <ellipse class="bab-sing" cx="100" cy="99" rx="5.5" ry="1" fill="#5a1f14" visibility="hidden" />
+                  )}
+                  {m.top === 'cap' && m.cap && (
+                    <text x="100" y="52" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="13" fill={m.cap[1]}>MBG*</text>
+                  )}
+                  {m.beard && m.hair && <path filter={F} d={beardPath} fill={m.hair} />}
+                  <g class="bab-eyes">
+                    <ellipse cx="88" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
+                    <ellipse cx="112" cy="80" rx="9.5" ry="11.5" fill="#fffaf0" stroke={clayDeep} stroke-width="1.5" />
+                    <circle cx="90" cy="83" r="4.5" fill="#2e1f16" />
+                    <circle cx="110" cy="83" r="4.5" fill="#2e1f16" />
                   </g>
+                  {m.top !== 'cap' && <path filter={F} d="M77 66 Q88 58 97 64 M103 64 Q112 58 123 66" fill="none" stroke={m.clay} stroke-width="6" stroke-linecap="round" />}
+                  <ellipse filter={F} cx="100" cy="96" rx="6" ry="5" fill={m.clay} stroke={clayDeep} stroke-width="1" />
+                  {m.mustache && m.hair && <path filter={F} d={mustachePath} fill={m.hair} />}
+                  <path class="bab-smile" d="M84 108 Q100 120 116 108" fill="none" stroke="#5a1f14" stroke-width="3" stroke-linecap="round" />
                 </g>
                 <g class="bab-inst"><use href="" visibility="hidden" /></g>
                 <g class="bab-arms">
                   {[0, 1].map(() => (
                     <g class="bab-arm">
                       <g filter="url(#clay-arm)">
-                        <path class="bab-arm-out" fill="none" stroke={skinDeep} stroke-width="15.5" stroke-linecap="round" />
-                        <path class="bab-arm-in" fill="none" stroke={m.skin} stroke-width="12" stroke-linecap="round" />
-                        <path class="bab-sleeve-out" fill="none" stroke={shirtDeep} stroke-width="22" stroke-linecap="round" />
-                        <path class="bab-sleeve-in" fill="none" stroke={m.shirt} stroke-width="18.5" stroke-linecap="round" />
+                        <path class="bab-arm-out" fill="none" stroke={clayDeep} stroke-width="16" stroke-linecap="round" />
+                        <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="12.5" stroke-linecap="round" />
                       </g>
                       <line class="bab-stick" stroke="#c98a5a" stroke-width="4" stroke-linecap="round" visibility="hidden" />
-                      <circle class="bab-hand" r="8.5" fill={m.skin} stroke={skinDeep} stroke-width="2" filter={F} />
+                      <ellipse class="bab-hand" rx="10" ry="9" fill={m.clay} stroke={clayDeep} stroke-width="2" filter={F} />
                     </g>
                   ))}
                 </g>
@@ -513,16 +500,93 @@ const F = 'url(#clay)';
   type Slung = 'electric' | 'acoustic' | 'bass' | 'banjo';
   interface Pt { x: number; y: number }
 
+  /**
+   * The song the band jams on: chord names and how many beats each lasts,
+   * looped. Every part is voiced from these names, so changing the song
+   * means changing this list.
+   */
+  const SONG = {
+    bpm: 112,
+    chords: [
+      ['G', 4],
+      ['D', 4],
+      ['Em', 4],
+      ['C', 4],
+    ] as [string, number][],
+  };
+
   const INSTRUMENTS: InstId[] = ['piano', 'bass', 'electric', 'acoustic', 'banjo', 'drums'];
   const LABELS: Record<InstId, string> = {
     piano: 'piano', bass: 'bass', electric: 'electric guitar', acoustic: 'acoustic guitar', banjo: 'banjo', drums: 'drums',
   };
   const STORAGE_KEY = 'mbg-bandmates';
 
-  /** Four bars of G–D–Em–C in sixteenth notes. */
-  const LOOP = 64;
-  const BPM = 112;
-  const STEP = 60 / BPM / 4;
+  // ---------- Chords ----------
+
+  const NOTES: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const QUALITIES: Record<string, number[]> = {
+    '': [0, 4, 7], m: [0, 3, 7], min: [0, 3, 7], 5: [0, 7],
+    7: [0, 4, 7, 10], m7: [0, 3, 7, 10], maj7: [0, 4, 7, 11], M7: [0, 4, 7, 11],
+    6: [0, 4, 7, 9], m6: [0, 3, 7, 9], 9: [0, 4, 7, 10, 14], add9: [0, 4, 7, 14],
+    sus: [0, 5, 7], sus2: [0, 2, 7], sus4: [0, 5, 7], dim: [0, 3, 6], aug: [0, 4, 8],
+  };
+
+  interface Voicing {
+    /** Root pitch class, 0 = C. */
+    pc: number;
+    bass: number;
+    piano: number[];
+    power: number;
+    strum: number[];
+    banjo: number[];
+  }
+
+  const pitchClass = (letter: string, accidental: string) => (NOTES[letter] + (accidental === '#' ? 1 : accidental === 'b' ? -1 : 0) + 12) % 12;
+
+  /** Turn a chord name like "Em", "D/F#" or "Cadd9" into notes for every instrument. */
+  function voice(name: string): Voicing {
+    const m = /^([A-G])([#b]?)([^/]*)(?:\/([A-G])([#b]?))?$/.exec(name.trim());
+    if (!m) throw new Error(`Can't read chord "${name}"`);
+    const pc = pitchClass(m[1], m[2]);
+    const low = m[4] ? pitchClass(m[4], m[5]) : pc;
+    const quality = m[3];
+    const intervals = QUALITIES[quality] ?? (quality.startsWith('m') && !quality.startsWith('maj') ? QUALITIES.m : QUALITIES['']);
+    const pcs = new Set(intervals.map((i) => (pc + i) % 12));
+    const tonesIn = (from: number, to: number) => {
+      const out: number[] = [];
+      for (let n = from; n <= to; n++) if (pcs.has(n % 12)) out.push(n);
+      return out;
+    };
+    const piano = [...new Set(intervals.map((i) => {
+      let n = 48 + pc + i;
+      while (n > 67) n -= 12;
+      while (n < 52) n += 12;
+      return n;
+    }))].sort((a, b) => a - b);
+    // Guitar: bass note on the low strings, then chord tones up the neck, six strings at most.
+    const strumRoot = 40 + ((low - 4 + 12) % 12);
+    return {
+      pc,
+      bass: 36 + low,
+      piano,
+      power: 40 + ((pc - 4 + 12) % 12),
+      strum: [strumRoot, ...tonesIn(strumRoot + 5, strumRoot + 27).slice(0, 5)],
+      banjo: tonesIn(62, 80).slice(0, 4),
+    };
+  }
+
+  /** The chord under each sixteenth note of the loop, and where each new chord lands. */
+  const CHART: Voicing[] = [];
+  const CHANGES = new Set<number>();
+  for (const [name, beats] of SONG.chords) {
+    const v = voice(name);
+    CHANGES.add(CHART.length);
+    for (let i = 0; i < beats * 4; i++) CHART.push(v);
+  }
+  const LOOP = CHART.length;
+  const STEP = 60 / SONG.bpm / 4;
+  /** The drummer's tom fill takes the last beat of the loop. */
+  const isFill = (step: number) => step >= LOOP - 4;
 
   const P = (x: number, y: number): Pt => ({ x, y });
   const lerp = (a: Pt, b: Pt, t: number): Pt => P(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
@@ -538,26 +602,28 @@ const F = 'url(#clay)';
   /**
    * Where each slung instrument hangs on a player, plus how its hands move:
    * the strumming hand rocks across the strings and the fretting hand
-   * slides up the neck for each chord.
+   * slides up the neck to wherever the chord's root is.
    */
-  const SLUNG: Record<Slung, { at: Pt; rot: number; strum: Pt; amp: number; period: number; frets: number[] }> = {
-    electric: { at: P(90, 190), rot: -24, strum: P(-4, 0), amp: 9, period: 2, frets: [62, 72, 56, 48] },
-    acoustic: { at: P(88, 192), rot: -24, strum: P(6, 0), amp: 11, period: 4, frets: [56, 64, 50, 46] },
-    bass: { at: P(80, 194), rot: -26, strum: P(-6, 0), amp: 5, period: 2, frets: [70, 82, 76, 62] },
-    banjo: { at: P(90, 190), rot: -22, strum: P(-6, 4), amp: 3.5, period: 1, frets: [60, 70, 54, 48] },
+  const SLUNG: Record<Slung, { at: Pt; rot: number; strum: Pt; amp: number; period: number; fret: (pc: number) => number }> = {
+    electric: { at: P(90, 192), rot: -24, strum: P(-4, 0), amp: 9, period: 2, fret: (pc) => 46 + ((pc - 4 + 12) % 12) * 2.6 },
+    acoustic: { at: P(88, 194), rot: -24, strum: P(6, 0), amp: 11, period: 4, fret: (pc) => 44 + ((pc - 4 + 12) % 12) * 2.4 },
+    bass: { at: P(80, 196), rot: -26, strum: P(-6, 0), amp: 5, period: 2, fret: (pc) => 54 + ((pc - 4 + 12) % 12) * 3 },
+    banjo: { at: P(90, 192), rot: -22, strum: P(-6, 4), amp: 3.5, period: 1, fret: (pc) => 44 + ((pc - 7 + 12) % 12) * 2.6 },
   };
   const FIXED_AT: Record<'piano' | 'drums', Pt> = { piano: P(100, 200), drums: P(100, 252) };
-  const SHOULDERS: [Pt, Pt] = [P(73, 126), P(127, 126)];
-  const REST: [Pt, Pt] = [P(64, 196), P(136, 196)];
+  const SHOULDERS: [Pt, Pt] = [P(76, 152), P(124, 152)];
+  const REST: [Pt, Pt] = [P(56, 212), P(144, 212)];
+  const WAVE: [Pt, Pt] = [P(36, 116), P(164, 116)];
+  /** Bodies squash and lean from the feet. */
+  const FEET = P(100, 304);
   /** Drummers sit down behind the kit. */
   const SEAT = 14;
 
   interface HandEvent { step: number; at: Pt }
 
-  /** Repeat a one-bar pattern of events across the four-bar loop. */
-  function everyBar(steps: number[], at: (bar: number, step: number) => Pt): HandEvent[] {
+  function hits(test: (step: number, s16: number) => boolean, at: (step: number) => Pt): HandEvent[] {
     const out: HandEvent[] = [];
-    for (let bar = 0; bar < 4; bar++) for (const s of steps) out.push({ step: bar * 16 + s, at: at(bar, s) });
+    for (let step = 0; step < LOOP; step++) if (test(step, step % 16)) out.push({ step, at: at(step) });
     return out;
   }
 
@@ -567,30 +633,19 @@ const F = 'url(#clay)';
   const TOM = P(92, 200);
   const CRASH = P(160, 172);
   const STICK: [Pt, Pt] = [P(-20, 10), P(20, 10)];
-  const isFill = (step: number) => step >= 60;
 
   const DRUM_HANDS: [HandEvent[], HandEvent[]] = [
-    // Left hand rides the hi-hat, then joins the tom fill at the end of the loop.
-    [
-      ...everyBar([0, 2, 4, 6, 8, 10, 12, 14], () => HIHAT).filter((e) => !isFill(e.step)),
-      { step: 61, at: TOM },
-      { step: 63, at: TOM },
-    ],
-    // Right hand: backbeat on the snare, a crash at the top, toms in the fill.
-    [
-      { step: 0, at: CRASH },
-      ...everyBar([4, 12], () => SNARE).filter((e) => !isFill(e.step)),
-      { step: 60, at: TOM },
-      { step: 62, at: TOM },
-    ],
-  ].map((events) => events.sort((a, b) => a.step - b.step)) as [HandEvent[], HandEvent[]];
-
-  const PIANO_HANDS: [HandEvent[], HandEvent[]] = [
-    everyBar([0, 8], (bar) => P([62, 72, 66, 56][bar], 194)),
-    everyBar([0, 6, 10], (bar, s) => P([128, 138, 132, 122][bar] + (s === 6 ? 4 : 0), 194)),
+    // Left hand rides the hi-hat, then joins the tom fill.
+    hits((step, s) => (isFill(step) ? (LOOP - step) % 2 === 1 : s % 2 === 0), (step) => (isFill(step) ? TOM : HIHAT)),
+    // Right hand: a crash at the top, backbeat on the snare, toms in the fill.
+    hits((step, s) => step === 0 || (isFill(step) ? (LOOP - step) % 2 === 0 : s === 4 || s === 12), (step) => (step === 0 ? CRASH : isFill(step) ? TOM : SNARE)),
   ];
 
-  const CLAPS: HandEvent[] = everyBar([4, 12], () => P(100, 170));
+  // Piano: left hand on the root, right hand comping, both moving up the keys with the chord.
+  const PIANO_HANDS: [HandEvent[], HandEvent[]] = [
+    hits((step, s) => CHANGES.has(step) || s === 0 || s === 8, (step) => P(54 + CHART[step].pc * 2, 194)),
+    hits((step, s) => CHANGES.has(step) || s === 0 || s === 6 || s === 10, (step) => P(122 + CHART[step].pc * 2 + (step % 16 === 6 ? 4 : 0), 194)),
+  ];
 
   /** Where a hand is between hits: down on each hit, swinging up in between. */
   function between(events: HandEvent[], s: number): { at: Pt; lift: number } {
@@ -605,24 +660,29 @@ const F = 'url(#clay)';
     return { at: lerp(last.at, next.at, smooth(frac)), lift: Math.sin(Math.PI * frac) * Math.min(1, gap / 2) };
   }
 
+  /** A squash-and-stretch lean from the feet, as a point mapper and an SVG transform. */
+  function bodyMove(y: number, deg: number, sx: number, sy: number) {
+    const map = (p: Pt) => {
+      const r = rotate(P((p.x - FEET.x) * sx, (p.y - FEET.y) * sy), deg);
+      return P(FEET.x + r.x, FEET.y + r.y + y);
+    };
+    const transform =
+      `translate(0 ${y.toFixed(2)}) rotate(${deg.toFixed(2)} ${FEET.x} ${FEET.y}) ` +
+      `translate(${FEET.x} ${FEET.y}) scale(${sx.toFixed(4)} ${sy.toFixed(4)}) translate(${-FEET.x} ${-FEET.y})`;
+    return { map, transform };
+  }
+
   function placeSlung(id: Slung, local: Pt): Pt {
     const g = SLUNG[id];
     const r = rotate(local, g.rot);
     return P(g.at.x + r.x, g.at.y + r.y);
   }
 
-  /** Point at t along a quadratic curve, and the control point of the piece before it. */
-  function splitQuad(a: Pt, c: Pt, b: Pt, t: number): [Pt, Pt] {
-    const ac = lerp(a, c, t);
-    return [ac, lerp(ac, lerp(c, b, t), t)];
-  }
-
   // ---------- Players ----------
 
   interface Arm {
     paths: SVGPathElement[];
-    sleeves: SVGPathElement[];
-    hand: SVGCircleElement;
+    hand: SVGEllipseElement;
     stick: SVGLineElement;
   }
 
@@ -630,17 +690,13 @@ const F = 'url(#clay)';
     name: string;
     button: HTMLButtonElement;
     body: SVGGElement;
-    head: SVGGElement;
     instG: SVGGElement;
     use: SVGUseElement;
-    arms: SVGGElement;
     arm: [Arm, Arm];
-    smile: SVGPathElement;
-    sing: SVGEllipseElement;
     inst: InstId | null;
-    /** A little personality in how each one bops. */
-    bob: number;
-    nod: number;
+    /** A little personality in how each one grooves. */
+    squash: number;
+    lean: number;
   }
 
   const root = document.querySelector<HTMLElement>('.bab')!;
@@ -651,24 +707,19 @@ const F = 'url(#clay)';
   const players: Player[] = [...root.querySelectorAll<HTMLButtonElement>('.bab-player')].map((button, i) => {
     const arm = [...button.querySelectorAll<SVGGElement>('.bab-arm')].map((g) => ({
       paths: [g.querySelector<SVGPathElement>('.bab-arm-out')!, g.querySelector<SVGPathElement>('.bab-arm-in')!],
-      sleeves: [g.querySelector<SVGPathElement>('.bab-sleeve-out')!, g.querySelector<SVGPathElement>('.bab-sleeve-in')!],
-      hand: g.querySelector<SVGCircleElement>('.bab-hand')!,
+      hand: g.querySelector<SVGEllipseElement>('.bab-hand')!,
       stick: g.querySelector<SVGLineElement>('.bab-stick')!,
     })) as [Arm, Arm];
     return {
       name: button.dataset.name!,
       button,
       body: button.querySelector<SVGGElement>('.bab-body')!,
-      head: button.querySelector<SVGGElement>('.bab-head')!,
       instG: button.querySelector<SVGGElement>('.bab-inst')!,
       use: button.querySelector<SVGUseElement>('.bab-inst use')!,
-      arms: button.querySelector<SVGGElement>('.bab-arms')!,
       arm,
-      smile: button.querySelector<SVGPathElement>('.bab-smile')!,
-      sing: button.querySelector<SVGEllipseElement>('.bab-sing')!,
       inst: null,
-      bob: [3, 4, 2.5, 3.5, 5][i % 5],
-      nod: [4, -5, 6, 3, -4][i % 5],
+      squash: [0.05, 0.07, 0.04, 0.06, 0.08][i % 5],
+      lean: [3, -4, 5, -3, 4][i % 5],
     };
   });
 
@@ -682,10 +733,7 @@ const F = 'url(#clay)';
     if (n.x * outward < 0) n = P(-n.x, -n.y);
     const ctrl = P((shoulder.x + hand.x) / 2 + n.x * bend, (shoulder.y + hand.y) / 2 + n.y * bend);
     const d = `M${shoulder.x.toFixed(1)} ${shoulder.y.toFixed(1)} Q${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)} ${hand.x.toFixed(1)} ${hand.y.toFixed(1)}`;
-    const [sc, se] = splitQuad(shoulder, ctrl, hand, 0.3);
-    const sleeve = `M${shoulder.x.toFixed(1)} ${shoulder.y.toFixed(1)} Q${sc.x.toFixed(1)} ${sc.y.toFixed(1)} ${se.x.toFixed(1)} ${se.y.toFixed(1)}`;
     for (const p of arm.paths) p.setAttribute('d', d);
-    for (const p of arm.sleeves) p.setAttribute('d', sleeve);
     arm.hand.setAttribute('cx', hand.x.toFixed(1));
     arm.hand.setAttribute('cy', hand.y.toFixed(1));
   }
@@ -693,11 +741,12 @@ const F = 'url(#clay)';
   /** Put a player in their pose at song position s (in sixteenth notes). */
   function pose(p: Player, s: number, playing: boolean) {
     const beat = (Math.PI * s) / 4;
-    const bob = playing ? -p.bob * Math.abs(Math.sin(beat)) : 0;
-    const y = (p.inst === 'drums' ? SEAT : 0) + bob;
-    const hands: [Pt, Pt] = [REST[0], REST[1]];
+    const k = playing ? p.squash * Math.abs(Math.sin(beat)) : 0;
+    const lean = playing ? p.lean * Math.sin(beat / 2) * (p.inst === 'drums' || p.inst === 'piano' ? 0.4 : 1) : 0;
+    const move = bodyMove(p.inst === 'drums' ? SEAT : 0, lean, 1 + k * 0.7, 1 - k);
+    const shoulders: [Pt, Pt] = [move.map(SHOULDERS[0]), move.map(SHOULDERS[1])];
+    const hands: [Pt, Pt] = [move.map(REST[0]), move.map(REST[1])];
     const sticks: (Pt | null)[] = [null, null];
-    let instY = 0;
 
     if (p.inst === 'drums' || p.inst === 'piano') {
       const events = p.inst === 'drums' ? DRUM_HANDS : PIANO_HANDS;
@@ -705,39 +754,35 @@ const F = 'url(#clay)';
         const { at, lift } = playing ? between(events[h], s) : { at: events[h][0].at, lift: 0 };
         if (p.inst === 'drums') {
           // The hand sits back up the stick from where the tip lands.
-          const hand = P(at.x - STICK[h].x, at.y - STICK[h].y - lift * 20);
+          hands[h] = P(at.x - STICK[h].x, at.y - STICK[h].y - lift * 20);
           const tip = rotate(STICK[h], (h === 0 ? 1 : -1) * lift * 35);
-          hands[h] = P(hand.x, hand.y - y);
-          sticks[h] = P(hand.x + tip.x, hand.y + tip.y - y);
+          sticks[h] = P(hands[h].x + tip.x, hands[h].y + tip.y);
         } else {
-          hands[h] = P(at.x, at.y - lift * 12 - y);
+          hands[h] = P(at.x, at.y - lift * 12);
         }
       }
     } else if (p.inst) {
       const g = SLUNG[p.inst];
       const t = playing ? s : 0;
       const strum = g.amp * Math.cos((2 * Math.PI * t) / g.period);
-      hands[0] = placeSlung(p.inst, P(g.strum.x + (p.inst === 'bass' ? strum * 0.6 : 0), g.strum.y + strum));
-      // Slide up the neck right at the chord change.
-      const bar = Math.floor(wrap(t) / 16);
-      const into = smooth(Math.max(0, (wrap(t) % 16) - 15));
-      const fret = g.frets[bar] + (g.frets[(bar + 1) % 4] - g.frets[bar]) * into;
-      hands[1] = placeSlung(p.inst, P(fret + (playing ? 1.5 * Math.sin(Math.PI * t) : 0), 5));
-      instY = y;
+      hands[0] = move.map(placeSlung(p.inst, P(g.strum.x + (p.inst === 'bass' ? strum * 0.6 : 0), g.strum.y + strum)));
+      // Slide to the next chord during the sixteenth before it lands.
+      const m = wrap(t);
+      const here = g.fret(CHART[Math.floor(m)].pc);
+      const next = g.fret(CHART[(Math.floor(m) + 1) % LOOP].pc);
+      const fret = here + (next - here) * smooth(m % 1);
+      hands[1] = move.map(placeSlung(p.inst, P(fret + (playing ? 1.5 * Math.sin(Math.PI * t) : 0), 5)));
     } else if (playing) {
-      const { lift } = between(CLAPS, s);
-      const apart = 5 + lift * 24;
-      hands[0] = P(100 - apart, 170 - lift * 8);
-      hands[1] = P(100 + apart, 170 - lift * 8);
+      // Nothing to play, so dance: arms up and down, one after the other.
+      const up = (Math.sin(beat) + 1) / 2;
+      hands[0] = move.map(lerp(REST[0], WAVE[0], up));
+      hands[1] = move.map(lerp(REST[1], WAVE[1], 1 - up));
     }
 
-    p.body.setAttribute('transform', `translate(0 ${y.toFixed(2)})`);
-    p.arms.setAttribute('transform', `translate(0 ${y.toFixed(2)})`);
-    p.instG.setAttribute('transform', `translate(0 ${instY.toFixed(2)})`);
-    p.head.setAttribute('transform', playing ? `rotate(${(p.nod * Math.sin(beat)).toFixed(2)} 100 112)` : '');
-
-    setArm(p.arm[0], SHOULDERS[0], hands[0], -1);
-    setArm(p.arm[1], SHOULDERS[1], hands[1], 1);
+    p.body.setAttribute('transform', move.transform);
+    p.instG.setAttribute('transform', p.inst && p.inst !== 'drums' && p.inst !== 'piano' ? move.transform : '');
+    setArm(p.arm[0], shoulders[0], hands[0], -1);
+    setArm(p.arm[1], shoulders[1], hands[1], 1);
     for (const h of [0, 1] as const) {
       const stick = p.arm[h].stick;
       const tip = sticks[h];
@@ -749,12 +794,6 @@ const F = 'url(#clay)';
         stick.setAttribute('y2', tip.y.toFixed(1));
       }
     }
-
-    // Empty-handed bandmates sing along.
-    const singing = playing && !p.inst;
-    p.smile.setAttribute('visibility', singing ? 'hidden' : 'visible');
-    p.sing.setAttribute('visibility', singing ? 'visible' : 'hidden');
-    if (singing) p.sing.setAttribute('ry', (1.5 + 5 * Math.abs(Math.sin((Math.PI * s) / 2))).toFixed(2));
   }
 
   function give(p: Player, inst: InstId | null) {
@@ -799,16 +838,11 @@ const F = 'url(#clay)';
 
   const midiHz = (m: number) => 440 * 2 ** ((m - 69) / 12);
 
-  const CHORDS = [
-    { bass: 43, piano: [55, 59, 62], power: 43, strum: [43, 47, 50, 55, 59, 67], banjo: [62, 67, 71, 74] },
-    { bass: 38, piano: [54, 57, 62], power: 50, strum: [50, 57, 62, 66], banjo: [62, 66, 69, 74] },
-    { bass: 40, piano: [52, 55, 59], power: 40, strum: [40, 47, 52, 55, 59, 64], banjo: [64, 67, 71, 76] },
-    { bass: 36, piano: [52, 55, 60], power: 48, strum: [48, 52, 55, 60, 64], banjo: [64, 67, 72, 76] },
-  ];
+  /** Offsets from the root, by sixteenth note within the bar. */
   const BASS_LINE: Record<number, number> = { 0: 0, 3: 0, 6: 12, 8: 0, 10: 7, 14: 12 };
   const STRUMS: Record<number, 'down' | 'up'> = { 0: 'down', 4: 'down', 6: 'up', 10: 'up', 12: 'down', 14: 'up' };
   const ROLL = [1, 2, 3, 0, 2, 3, 1, 3];
-  const TOMS: Record<number, number> = { 60: 200, 61: 170, 62: 140, 63: 115 };
+  const TOMS = [200, 170, 140, 115];
 
   class Band {
     ctx: AudioContext | null = null;
@@ -946,15 +980,17 @@ const F = 'url(#clay)';
       src.start(t);
     }
 
+    /** Schedule one sixteenth note. Only instruments somebody is holding make a sound. */
     private play(step: number, t: number) {
       const active = new Set(players.map((p) => p.inst));
       const s = step % 16;
       const loopStep = step % LOOP;
-      const chord = CHORDS[Math.floor(loopStep / 16)];
+      const chord = CHART[loopStep];
+      const change = CHANGES.has(loopStep);
 
       if (active.has('drums')) {
         if ([0, 8, 10].includes(s)) this.kick(t);
-        if (loopStep in TOMS) this.tom(t, TOMS[loopStep]);
+        if (isFill(loopStep)) this.tom(t, TOMS[loopStep - (LOOP - 4)]);
         else {
           if (s === 4 || s === 12) {
             this.hiss(t, 0.18, 'highpass', 1200, this.env(t, 0.45, 0.16, 0.002));
@@ -965,7 +1001,7 @@ const F = 'url(#clay)';
         if (loopStep === 0) this.hiss(t, 1.4, 'highpass', 5000, this.env(t, 0.28, 1.3, 0.002));
       }
 
-      if (active.has('bass') && s in BASS_LINE) {
+      if (active.has('bass') && (s in BASS_LINE || change)) {
         const ctx = this.ctx!;
         const f = ctx.createBiquadFilter();
         f.type = 'lowpass';
@@ -973,17 +1009,18 @@ const F = 'url(#clay)';
         f.frequency.setValueAtTime(1400, t);
         f.frequency.exponentialRampToValueAtTime(380, t + 0.2);
         f.connect(this.env(t, 0.42, 0.32, 0.006));
-        const hz = midiHz(chord.bass + BASS_LINE[s]);
+        const hz = midiHz(chord.bass + (change ? 0 : BASS_LINE[s]));
         this.osc('sawtooth', hz, t, 0.34, f);
         this.osc('sine', hz, t, 0.34, f);
       }
 
       if (active.has('piano')) {
-        const notes = s === 0 ? chord.piano : s === 6 || s === 10 ? chord.piano.map((n) => n + 12) : [];
-        const lh = s === 0 || s === 8 ? [chord.bass + 12] : [];
+        const big = s === 0 || change;
+        const notes = big ? chord.piano : s === 6 || s === 10 ? chord.piano.map((n) => n + 12) : [];
+        const lh = big || s === 8 ? [chord.bass + 12] : [];
         for (const n of [...notes, ...lh]) {
-          const decay = s === 0 ? 1.6 : 0.6;
-          this.osc('triangle', midiHz(n), t, decay, this.env(t, s === 0 ? 0.16 : 0.1, decay, 0.005));
+          const decay = big ? 1.6 : 0.6;
+          this.osc('triangle', midiHz(n), t, decay, this.env(t, big ? 0.16 : 0.1, decay, 0.005));
           this.osc('sine', midiHz(n) * 2, t, decay, this.env(t, 0.04, decay * 0.6, 0.005));
         }
       }
@@ -996,7 +1033,7 @@ const F = 'url(#clay)';
         const f = ctx.createBiquadFilter();
         f.type = 'lowpass';
         f.frequency.value = 2400;
-        const long = s === 0;
+        const long = change;
         shaper.connect(f).connect(this.env(t, long ? 0.13 : 0.09, long ? 0.9 : 0.16, 0.004));
         const pre = ctx.createGain();
         pre.gain.value = 0.35;
@@ -1013,20 +1050,7 @@ const F = 'url(#clay)';
         strings.forEach((n, i) => this.pluck(t + i * 0.012, n, 'acoustic', up ? 0.16 : 0.24));
       }
 
-      if (active.has('banjo')) this.pluck(t, chord.banjo[ROLL[s % 8]], 'banjo', s % 8 === 0 ? 0.3 : 0.2);
-
-      if (active.has(null) && (s === 4 || s === 12)) {
-        const g = this.ctx!.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        for (const d of [0, 0.011, 0.022]) {
-          g.gain.setValueAtTime(0.35, t + d);
-          g.gain.exponentialRampToValueAtTime(0.05, t + d + 0.009);
-        }
-        g.gain.setValueAtTime(0.35, t + 0.031);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-        g.connect(this.out);
-        this.hiss(t, 0.2, 'bandpass', 1400, g, 1.2);
-      }
+      if (active.has('banjo')) this.pluck(t, chord.banjo[ROLL[s % 8] % chord.banjo.length], 'banjo', s % 8 === 0 ? 0.3 : 0.2);
     }
   }
 
@@ -1041,9 +1065,14 @@ const F = 'url(#clay)';
 
   function setPlaying(on: boolean) {
     if (on === band.playing) return;
+    if (on && !players.some((p) => p.inst)) {
+      status.textContent = 'Nobody has an instrument yet! Hand somebody something first.';
+      return;
+    }
     if (on) {
       band.start();
       frame = requestAnimationFrame(animate);
+      status.textContent = 'Take it away!';
     } else {
       band.stop();
       cancelAnimationFrame(frame);
@@ -1052,10 +1081,6 @@ const F = 'url(#clay)';
     playBtn.setAttribute('aria-pressed', String(on));
     playBtn.querySelector('span')!.textContent = on ? 'Stop' : 'Play';
     playBtn.querySelector('.bab-play-icon')!.setAttribute('d', on ? 'M6 5h4v14H6zM14 5h4v14h-4z' : 'M7 4l13 8-13 8z');
-    if (on) {
-      const playing = players.filter((p) => p.inst).length;
-      status.textContent = playing ? 'Take it away!' : 'No instruments yet, so everybody sings. Hand them something!';
-    }
   }
 
   // ---------- Handing out instruments ----------
