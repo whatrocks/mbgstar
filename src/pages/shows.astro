@@ -17,7 +17,7 @@ const origin = Astro.url.origin;
           <span class="show-name">{show.venue}</span>
           {show.detail && <span class="show-detail">{show.detail}</span>}
           <a
-            class="show-calendar"
+            class="show-calendar clay-button"
             href={googleCalendarUrl(show, origin)}
             target="_blank"
             rel="noopener noreferrer"
@@ -67,18 +67,25 @@ const origin = Astro.url.origin;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 1.1rem;
   }
 
   .show-list li {
-    display: flex !important;
+    display: flex;
     gap: 1rem;
-    align-items: baseline;
+    align-items: center;
+    padding: 0.8rem 1rem 0.8rem 1.25rem;
   }
 
   .show-date {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--orange);
+    min-width: 9.5rem;
+  }
+
+  .show-name {
     font-weight: 700;
-    min-width: 8rem;
   }
 
   .show-detail {
@@ -86,19 +93,9 @@ const origin = Astro.url.origin;
   }
 
   .show-calendar {
-    display: inline-flex;
-    color: var(--ink);
-    background: var(--paper);
-    padding: 0.3rem;
-    border: 2px solid var(--ink);
-    box-shadow: 3px 3px 0 #000;
-    transition: transform 60ms ease, box-shadow 60ms ease;
-  }
-
-  .show-calendar:hover,
-  .show-calendar:focus-visible {
-    transform: translate(3px, 3px);
-    box-shadow: 0 0 0 #000;
+    --lift: 3px;
+    --blob: 10px 7px 11px 6px / 7px 10px 6px 11px;
+    padding: 0.4rem;
   }
 
   .show-calendar svg {

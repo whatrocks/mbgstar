@@ -5,11 +5,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="Music — Money Back Guarantee*">
   <h1>Music</h1>
   <div class="video-grid">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/PkiwIzlOOww?si=BWUAiRo7E6wU-ED5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="clay-frame">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/PkiwIzlOOww?si=BWUAiRo7E6wU-ED5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/Ls7FF78T6MI?si=f3ibez8XMjQakHNb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="clay-frame">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/Ls7FF78T6MI?si=f3ibez8XMjQakHNb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/jKuIO9XvSKI?si=58c-LQ-RffOmYmgp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <div class="clay-frame">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/jKuIO9XvSKI?si=58c-LQ-RffOmYmgp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
   </div>
 </BaseLayout>
 
@@ -20,12 +26,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     gap: 1.5rem;
   }
 
-  .video-grid :global(iframe) {
-    display: block;
+  .video-grid iframe {
     width: 100%;
     aspect-ratio: 16 / 9;
     height: auto;
-    border: 2px solid var(--ink);
-    background: var(--paper);
+    border: 0;
+    background: var(--ink);
   }
 </style>
