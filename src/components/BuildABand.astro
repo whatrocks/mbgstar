@@ -1,0 +1,1183 @@
+---
+/*
+ * Build-a-Bandmate: clay versions of the band. Hand each one an instrument,
+ * hit Play, and they jam along to a little Web Audio band that only plays
+ * the parts somebody is holding.
+ */
+
+type HairStyle = 'short' | 'buzz' | 'wavy' | 'swoop' | 'cap';
+
+interface Member {
+  name: string;
+  skin: string;
+  hair: string;
+  hairStyle: HairStyle;
+  beard?: 'full' | 'stubble';
+  /** Cap crown and brim, for hairStyle 'cap'. */
+  cap?: [string, string];
+  shirt: string;
+  pants: string;
+  shoes: string;
+}
+
+const members: Member[] = [
+  { name: 'Andy', skin: '#f1c9a5', hair: '#5a3a22', hairStyle: 'short', beard: 'stubble', shirt: '#d9440d', pants: '#3a4f8f', shoes: '#2e1f16' },
+  { name: 'Ben', skin: '#efc29c', hair: '#3a2618', hairStyle: 'cap', cap: ['#f2e4cc', '#0b7a72'], shirt: '#f2e4cc', pants: '#7a6a58', shoes: '#f4f0e8' },
+  { name: 'Charlie', skin: '#f3cfae', hair: '#2e1f16', hairStyle: 'wavy', shirt: '#0b7a72', pants: '#4a4a4a', shoes: '#9e2f06' },
+  { name: 'John', skin: '#dba27a', hair: '#4a3020', hairStyle: 'buzz', beard: 'full', shirt: '#4a4a4a', pants: '#3a4f8f', shoes: '#f4f0e8' },
+  { name: 'Zach', skin: '#f1c9a5', hair: '#8a5a32', hairStyle: 'swoop', shirt: '#3b4cca', pants: '#7a6a58', shoes: '#2e1f16' },
+];
+
+const instruments = [
+  { id: 'piano', label: 'Piano', icon: '-84 -16 168 112' },
+  { id: 'bass', label: 'Bass', icon: '-40 -34 172 68' },
+  { id: 'electric', label: 'Electric guitar', icon: '-40 -34 154 68' },
+  { id: 'acoustic', label: 'Acoustic guitar', icon: '-40 -30 152 60' },
+  { id: 'banjo', label: 'Banjo', icon: '-30 -30 152 60' },
+  { id: 'drums', label: 'Drums', icon: '-92 -96 184 140' },
+];
+
+/** Darker shade of a clay color, for outlines and the clay's "side". */
+function deep(hex: string, amount = 0.32): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift: number) => Math.round(((n >> shift) & 255) * (1 - amount));
+  return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
+}
+
+const hairPaths: Record<Exclude<HairStyle, 'cap'>, string> = {
+  short: 'M70 76 C66 50 82 40 100 40 C120 40 134 50 130 76 C127 64 120 57 108 58 C100 52 88 56 82 60 C76 63 72 68 70 76 Z',
+  buzz: 'M71 70 C70 50 84 43 100 43 C116 43 130 50 129 70 C122 58 112 54 100 54 C88 54 78 58 71 70 Z',
+  wavy: 'M68 86 C60 66 66 46 80 42 C86 34 104 32 112 38 C126 36 138 50 134 66 C138 74 134 84 130 88 C130 74 126 64 118 60 C110 64 96 62 88 58 C80 64 72 72 70 88 Z',
+  swoop: 'M70 78 C64 52 80 38 102 39 C122 40 136 54 130 74 C126 66 122 62 116 60 C104 66 88 66 76 60 C72 66 71 72 70 78 Z',
+};
+const beardPath = 'M70 80 C70 104 84 117 100 117 C116 117 130 104 130 80 C126 92 116 101 100 101 C84 101 74 92 70 80 Z';
+
+// 18 white keys; black keys sit after these white keys in each octave.
+const whiteKeys = Array.from({ length: 18 }, (_, i) => -74 + i * (148 / 18));
+const blackKeys = whiteKeys.slice(0, -1).filter((_, i) => [0, 1, 3, 4, 5].includes(i % 7));
+
+/*
+ * Clay: the shape's own alpha, blurred, becomes a soft rounded height map
+ * with a little lumpy noise pressed in. Lit from the top left, so every part
+ * reads as a squished lump with a highlight on its shoulder.
+ */
+const clay = `
+  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+  <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="7" result="noise" />
+  <feComposite in="blur" in2="noise" operator="arithmetic" k2="1" k3="0.2" result="height" />
+  <feDiffuseLighting in="height" surfaceScale="4" diffuseConstant="1" lighting-color="#fff" result="diffuse">
+    <feDistantLight azimuth="225" elevation="55" />
+  </feDiffuseLighting>
+  <feComposite in="SourceGraphic" in2="diffuse" operator="arithmetic" k1="1.18" result="shaded" />
+  <feSpecularLighting in="height" surfaceScale="4" specularConstant="0.5" specularExponent="18" lighting-color="#fff" result="spec">
+    <feDistantLight azimuth="225" elevation="50" />
+  </feSpecularLighting>
+  <feComposite in="spec" in2="SourceAlpha" operator="in" result="specIn" />
+  <feComposite in="shaded" in2="specIn" operator="arithmetic" k2="1" k3="0.45" result="lit" />
+  <feComposite in="lit" in2="SourceAlpha" operator="in" />
+`;
+
+const F = 'url(#clay)';
+---
+
+<section class="bab" aria-label="Build-a-Bandmate">
+  <svg class="bab-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="clay" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB" set:html={clay} />
+      <!--
+        Bounding boxes leave out stroke width, so the noodle limbs (thick
+        strokes) get fixed regions covering everywhere an arm or leg can reach.
+      -->
+      <filter id="clay-arm" filterUnits="userSpaceOnUse" x="15" y="104" width="170" height="130" color-interpolation-filters="sRGB" set:html={clay} />
+      <filter id="clay-leg" filterUnits="userSpaceOnUse" x="64" y="184" width="72" height="120" color-interpolation-filters="sRGB" set:html={clay} />
+
+      <!-- Instruments are drawn around their own origin; see PLACEMENTS in the script. -->
+      <g id="inst-electric">
+        <path filter={F} d="M-34 -4 C-38 -22 -22 -28 -10 -20 C-2 -15 6 -16 12 -24 C20 -32 32 -24 26 -12 C22 -6 22 6 26 12 C32 24 20 32 12 24 C6 16 -2 15 -10 20 C-22 28 -38 22 -34 4 Z" fill="#e8202a" stroke="#9e1018" stroke-width="2" />
+        <path d="M-24 -10 C-14 -16 4 -12 14 -14 L16 10 C4 12 -14 16 -24 10 Z" fill="#f2e4cc" />
+        <rect x="-22" y="-6" width="4" height="12" rx="1" fill="#8c8c8c" />
+        <rect x="-10" y="-6" width="4" height="12" rx="1" fill="#2e1f16" />
+        <rect x="2" y="-6" width="4" height="12" rx="1" fill="#2e1f16" />
+        <path filter={F} d="M16 -3.5 L92 -3 L92 3 L16 3.5 Z" fill="#c98a5a" stroke="#7a4a2a" stroke-width="1.2" />
+        <path filter={F} d="M90 -4 C96 -9 106 -10 112 -6 C114 -2 110 1 106 0 L104 4 L90 4 Z" fill="#c98a5a" stroke="#7a4a2a" stroke-width="1.2" />
+        <g stroke="#f2e4cc" stroke-width="0.8">{[30, 42, 53, 63, 72, 80, 87].map((x) => <line x1={x} y1="-3" x2={x} y2="3" />)}</g>
+        <g stroke="#fff" stroke-width="0.5" opacity="0.75">{[-2, -0.7, 0.7, 2].map((y) => <line x1="-20" y1={y} x2="104" y2={y} />)}</g>
+      </g>
+
+      <g id="inst-bass">
+        <path filter={F} d="M-34 -4 C-38 -24 -22 -30 -8 -22 C0 -17 8 -18 16 -28 C26 -36 36 -26 28 -12 C24 -6 24 6 28 12 C34 24 20 32 12 24 C6 16 -2 17 -10 22 C-22 30 -38 22 -34 4 Z" fill="#0b7a72" stroke="#04524c" stroke-width="2" />
+        <path d="M-22 -12 C-12 -18 2 -14 10 -16 L12 12 C2 14 -12 18 -22 12 Z" fill="#f2e4cc" />
+        <rect x="-24" y="-6" width="5" height="12" rx="1" fill="#8c8c8c" />
+        <rect x="-6" y="-7" width="5" height="14" rx="1" fill="#2e1f16" />
+        <path filter={F} d="M18 -4 L112 -3.5 L112 3.5 L18 4 Z" fill="#c98a5a" stroke="#7a4a2a" stroke-width="1.2" />
+        <path filter={F} d="M110 -5 L128 -7 C132 -6 132 -1 128 0 L124 5 L110 5 Z" fill="#c98a5a" stroke="#7a4a2a" stroke-width="1.2" />
+        <g fill="#c8c8c8">{[114, 118, 122, 126].map((x) => <circle cx={x} cy="-8" r="1.8" />)}</g>
+        <g stroke="#f2e4cc" stroke-width="0.8">{[34, 49, 62, 74, 85, 95, 104].map((x) => <line x1={x} y1="-3.5" x2={x} y2="3.5" />)}</g>
+        <g stroke="#fff" stroke-width="0.7" opacity="0.75">{[-2.4, -0.8, 0.8, 2.4].map((y) => <line x1="-22" y1={y} x2="122" y2={y} />)}</g>
+      </g>
+
+      <g id="inst-acoustic">
+        <path filter={F} d="M-36 0 C-36 -26 -12 -28 0 -18 C6 -24 28 -24 28 0 C28 24 6 24 0 18 C-12 28 -36 26 -36 0 Z" fill="#e8b46a" stroke="#a8743a" stroke-width="2" />
+        <circle cx="8" cy="0" r="8.5" fill="none" stroke="#a8743a" stroke-width="1.5" />
+        <circle cx="8" cy="0" r="6.5" fill="#2e1f16" />
+        <rect x="-26" y="-7" width="5" height="14" rx="1.5" fill="#7a4a2a" />
+        <path filter={F} d="M24 -3.5 L92 -3 L92 3 L24 3.5 Z" fill="#7a4a2a" stroke="#4a2a14" stroke-width="1.2" />
+        <path filter={F} d="M90 -4.5 L108 -6 C111 -6 111 6 108 6 L90 4.5 Z" fill="#7a4a2a" stroke="#4a2a14" stroke-width="1.2" />
+        <g stroke="#f2e4cc" stroke-width="0.8">{[36, 47, 57, 66, 74, 81, 87].map((x) => <line x1={x} y1="-3" x2={x} y2="3" />)}</g>
+        <g stroke="#fff" stroke-width="0.5" opacity="0.8">{[-2.2, -1.3, -0.4, 0.4, 1.3, 2.2].map((y) => <line x1="-24" y1={y} x2="104" y2={y} />)}</g>
+      </g>
+
+      <g id="inst-banjo">
+        <circle filter={F} cx="0" cy="0" r="27" fill="#7a4a2a" stroke="#4a2a14" stroke-width="2" />
+        <circle cx="0" cy="0" r="23" fill="none" stroke="#c8c8c8" stroke-width="3.5" />
+        <circle filter={F} cx="0" cy="0" r="20.5" fill="#f6efe2" />
+        <path d="M-20 -2 L-8 -2 L-8 2 L-20 2 Z" fill="#8c8c8c" />
+        <rect x="2" y="-4" width="2.5" height="8" fill="#7a4a2a" />
+        <path filter={F} d="M22 -3 L106 -2.5 L106 2.5 L22 3 Z" fill="#7a4a2a" stroke="#4a2a14" stroke-width="1.2" />
+        <path filter={F} d="M104 -4 L118 -6 C121 -5 121 5 118 6 L104 4 Z" fill="#7a4a2a" stroke="#4a2a14" stroke-width="1.2" />
+        <circle cx="56" cy="-5" r="2" fill="#f2e4cc" />
+        <g stroke="#f2e4cc" stroke-width="0.8">{[34, 45, 55, 64, 72, 80, 87, 93].map((x) => <line x1={x} y1="-2.5" x2={x} y2="2.5" />)}</g>
+        <g stroke="#fff" stroke-width="0.45" opacity="0.8">{[-1.8, -0.9, 0, 0.9, 1.8].map((y) => <line x1="-14" y1={y} x2="110" y2={y} />)}</g>
+      </g>
+
+      <g id="inst-piano">
+        <g stroke="#2e1f16" stroke-width="6" stroke-linecap="round" filter={F}>
+          <line x1="-50" y1="14" x2="50" y2="92" />
+          <line x1="50" y1="14" x2="-50" y2="92" />
+        </g>
+        <rect filter={F} x="-81" y="-13" width="162" height="28" rx="7" fill="#4a4a4a" stroke="#2e1f16" stroke-width="2" />
+        <rect x="-74" y="-6" width="148" height="16" rx="2" fill="#fffaf0" />
+        <g stroke="#c9ad85" stroke-width="0.8">{whiteKeys.slice(1).map((x) => <line x1={x} y1="-6" x2={x} y2="10" />)}</g>
+        <g fill="#2e1f16">{blackKeys.map((x) => <rect x={x + 148 / 18 - 2.5} y="-6" width="5" height="9.5" rx="1" />)}</g>
+        <circle cx="-74" cy="-9.5" r="1.6" fill="#ffd23f" />
+        <circle cx="-68" cy="-9.5" r="1.6" fill="#e8202a" />
+      </g>
+
+      <g id="inst-drums">
+        <g stroke="#8c8c8c" stroke-width="3" stroke-linecap="round">
+          <line x1="64" y1="-80" x2="72" y2="40" />
+          <line x1="-68" y1="-56" x2="-70" y2="40" />
+        </g>
+        <ellipse filter={F} cx="64" cy="-82" rx="25" ry="5" transform="rotate(-12 64 -82)" fill="#ffd23f" stroke="#c99a1a" stroke-width="1.5" />
+        <ellipse filter={F} cx="-68" cy="-54" rx="19" ry="4" fill="#ffd23f" stroke="#c99a1a" stroke-width="1.5" />
+        <ellipse filter={F} cx="-68" cy="-59" rx="19" ry="4" fill="#ffd23f" stroke="#c99a1a" stroke-width="1.5" />
+        <circle filter={F} cx="0" cy="0" r="40" fill="#e8202a" stroke="#9e1018" stroke-width="3" />
+        <circle filter={F} cx="0" cy="0" r="33" fill="#f2e4cc" />
+        <text x="0" y="7" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="20" fill="#d9440d">MBG*</text>
+        <g filter={F}>
+          <rect x="-24" y="-52" width="32" height="15" rx="3" fill="#e8202a" stroke="#9e1018" stroke-width="1.5" />
+          <ellipse cx="-8" cy="-52" rx="16" ry="5" fill="#fffaf0" stroke="#c8c8c8" stroke-width="1.5" />
+        </g>
+        <g filter={F}>
+          <rect x="30" y="-38" width="34" height="14" rx="3" fill="#c8c8c8" stroke="#8c8c8c" stroke-width="1.5" />
+          <ellipse cx="47" cy="-38" rx="17" ry="5" fill="#fffaf0" stroke="#c8c8c8" stroke-width="1.5" />
+        </g>
+      </g>
+    </defs>
+  </svg>
+
+  <div class="bab-stage clay">
+    <div class="bab-floor" aria-hidden="true"></div>
+    <ul class="bab-band" role="list">
+      {members.map((m, i) => {
+        const skinDeep = deep(m.skin, 0.22);
+        const shirtDeep = deep(m.shirt);
+        return (
+          <li>
+            <button type="button" class="bab-player" data-player={i} data-name={m.name} aria-label={`${m.name}: empty-handed`}>
+              <svg viewBox="0 0 200 320" aria-hidden="true" focusable="false" style={`--blink-delay: ${-i * 1.7}s`}>
+                <ellipse cx="100" cy="306" rx="64" ry="9" fill="rgba(70, 40, 20, 0.2)" />
+                <g class="bab-body">
+                  <g stroke={m.pants} stroke-width="24" stroke-linecap="round" filter="url(#clay-leg)">
+                    <path d="M88 198 L84 290" />
+                    <path d="M112 198 L116 290" />
+                  </g>
+                  <g fill={m.shoes} stroke={deep(m.shoes, 0.25)} stroke-width="2" filter={F}>
+                    <ellipse cx="80" cy="297" rx="17" ry="9" />
+                    <ellipse cx="120" cy="297" rx="17" ry="9" />
+                  </g>
+                  <path filter={F} d="M68 126 C70 114 86 110 100 110 C114 110 130 114 132 126 L138 196 C138 206 120 212 100 212 C80 212 62 206 62 196 Z" fill={m.shirt} stroke={shirtDeep} stroke-width="2.5" />
+                  <path d="M90 112 L100 124 L110 112" fill="none" stroke={shirtDeep} stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <g class="bab-head">
+                    <g fill={m.skin} stroke={skinDeep} stroke-width="2" filter={F}>
+                      <rect x="91" y="100" width="18" height="16" rx="6" />
+                      <circle cx="70" cy="80" r="7" />
+                      <circle cx="130" cy="80" r="7" />
+                      <ellipse cx="100" cy="78" rx="30" ry="33" />
+                    </g>
+                    {m.beard && (
+                      <g filter={F} opacity={m.beard === 'stubble' ? 0.38 : 1}>
+                        <path d={beardPath} fill={m.hair} />
+                      </g>
+                    )}
+                    {m.hairStyle === 'cap' && m.cap ? (
+                      <g filter={F}>
+                        <path d="M68 70 C66 44 84 35 100 35 C118 35 134 44 132 70 Z" fill={m.cap[0]} stroke={deep(m.cap[0], 0.2)} stroke-width="2" />
+                        <path d="M66 67 C82 61 122 61 140 69 C143 75 133 77 128 74 C112 70 86 70 70 74 C63 74 61 69 66 67 Z" fill={m.cap[1]} stroke={deep(m.cap[1])} stroke-width="2" />
+                        <circle cx="100" cy="36" r="3" fill={m.cap[1]} />
+                      </g>
+                    ) : (
+                      <path filter={F} d={hairPaths[m.hairStyle as Exclude<HairStyle, 'cap'>]} fill={m.hair} stroke={deep(m.hair, 0.3)} stroke-width="1.5" />
+                    )}
+                    {m.hairStyle === 'cap' && m.cap && (
+                      <text x="100" y="60" text-anchor="middle" font-family="Fredoka, 'Arial Rounded MT Bold', sans-serif" font-weight="700" font-size="11" fill={m.cap[1]}>MBG*</text>
+                    )}
+                    <g class="bab-eyes">
+                      <circle cx="89" cy="77" r="5.5" fill="#fffaf0" />
+                      <circle cx="111" cy="77" r="5.5" fill="#fffaf0" />
+                      <circle cx="90" cy="78" r="2.8" fill="#2e1f16" />
+                      <circle cx="110" cy="78" r="2.8" fill="#2e1f16" />
+                    </g>
+                    <path d="M83 67 Q89 64 95 67 M105 67 Q111 64 117 67" fill="none" stroke={deep(m.hair, 0.1)} stroke-width="2.5" stroke-linecap="round" />
+                    <ellipse cx="100" cy="87" rx="4.5" ry="3.5" fill={skinDeep} />
+                    {m.beard === 'full' && <path d="M89 93 Q100 88 111 93 Q100 96 89 93 Z" fill={deep(m.hair, 0.1)} />}
+                    <path class="bab-smile" d="M91 97 Q100 104 109 97" fill="none" stroke="#5a1f14" stroke-width="2.5" stroke-linecap="round" />
+                    <ellipse class="bab-sing" cx="100" cy="99" rx="5.5" ry="1" fill="#5a1f14" visibility="hidden" />
+                  </g>
+                </g>
+                <g class="bab-inst"><use href="" visibility="hidden" /></g>
+                <g class="bab-arms">
+                  {[0, 1].map(() => (
+                    <g class="bab-arm">
+                      <g filter="url(#clay-arm)">
+                        <path class="bab-arm-out" fill="none" stroke={skinDeep} stroke-width="15.5" stroke-linecap="round" />
+                        <path class="bab-arm-in" fill="none" stroke={m.skin} stroke-width="12" stroke-linecap="round" />
+                        <path class="bab-sleeve-out" fill="none" stroke={shirtDeep} stroke-width="22" stroke-linecap="round" />
+                        <path class="bab-sleeve-in" fill="none" stroke={m.shirt} stroke-width="18.5" stroke-linecap="round" />
+                      </g>
+                      <line class="bab-stick" stroke="#c98a5a" stroke-width="4" stroke-linecap="round" visibility="hidden" />
+                      <circle class="bab-hand" r="8.5" fill={m.skin} stroke={skinDeep} stroke-width="2" filter={F} />
+                    </g>
+                  ))}
+                </g>
+              </svg>
+              <span class="bab-name">{m.name}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+
+  <div class="bab-tray" role="group" aria-label="Instruments">
+    {instruments.map((inst) => (
+      <button type="button" class="bab-inst-btn clay-button" data-inst={inst.id} aria-pressed="false">
+        <svg viewBox={inst.icon} aria-hidden="true" focusable="false"><use href={`#inst-${inst.id}`} /></svg>
+        <span>{inst.label}</span>
+      </button>
+    ))}
+  </div>
+
+  <div class="bab-controls">
+    <button type="button" class="clay-button bab-play" aria-pressed="false">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path class="bab-play-icon" d="M7 4l13 8-13 8z" fill="currentColor" /></svg>
+      <span>Play</span>
+    </button>
+    <button type="button" class="clay-button bab-shuffle">Shuffle</button>
+    <button type="button" class="clay-button bab-clear">Clear</button>
+  </div>
+  <div class="bab-status" role="status" aria-live="polite">Pick an instrument and tap a bandmate, or drag it right onto them. Then hit Play.</div>
+</section>
+
+<style>
+  .bab {
+    margin: 0 0 1.75rem;
+  }
+
+  .bab-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .bab-stage {
+    --c: var(--paper);
+    position: relative;
+    padding: 1rem 0.75rem 0.5rem;
+    overflow: hidden;
+  }
+
+  /* A slab of orange clay for them to stand on. */
+  .bab-floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    background: var(--clay-texture) 0 0 / 240px, var(--orange);
+    background-blend-mode: soft-light, normal;
+    box-shadow: inset 0 6px 0 rgba(255, 255, 255, 0.2), inset 0 10px 14px rgba(0, 0, 0, 0.12);
+    border-radius: 40% 40% 0 0 / 22px 22px 0 0;
+  }
+
+  .bab-band {
+    position: relative;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.25rem;
+  }
+
+  .bab-player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 0 0.4rem;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    border-radius: var(--blob);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bab-player svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    transition: transform 140ms ease;
+  }
+
+  .bab:has(.bab-inst-btn[aria-pressed="true"]) .bab-player:hover svg,
+  .bab-player.is-target svg {
+    transform: translateY(-4px) scale(1.04);
+  }
+
+  .bab-player.is-target {
+    outline: 3px dashed var(--teal);
+    outline-offset: -2px;
+  }
+
+  .bab-player.boing svg {
+    animation: bab-boing 420ms ease;
+  }
+
+  @keyframes bab-boing {
+    0% { transform: scale(1, 1); }
+    30% { transform: scale(1.12, 0.86) translateY(14px); }
+    60% { transform: scale(0.94, 1.08) translateY(-6px); }
+    100% { transform: scale(1, 1); }
+  }
+
+  .bab-eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: bab-blink 5s infinite;
+    animation-delay: var(--blink-delay, 0s);
+  }
+
+  @keyframes bab-blink {
+    0%, 94%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.1); }
+  }
+
+  .bab-name {
+    --c: var(--cream);
+    --c-deep: var(--cream-deep);
+    --lift: 4px;
+    margin-top: -0.25rem;
+    padding: 0.15rem 0.6rem 0.1rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--clay-texture) 0 0 / 240px, var(--c);
+    background-blend-mode: soft-light, normal;
+    border-radius: var(--blob);
+    box-shadow:
+      inset 2px 3px 4px rgba(255, 255, 255, 0.4),
+      inset -2px -3px 5px rgba(0, 0, 0, 0.14),
+      0 var(--lift) 0 var(--c-deep);
+  }
+
+  .bab-tray {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.9rem 0.6rem;
+    margin: 1.6rem 0 0;
+  }
+
+  .bab-inst-btn {
+    --c: var(--cream);
+    --c-deep: var(--cream-deep);
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.35rem 0.4rem;
+    color: var(--ink);
+    font-size: 0.78rem;
+    line-height: 1.1;
+    text-align: center;
+    touch-action: none;
+  }
+
+  .bab-inst-btn svg {
+    width: 100%;
+    height: 38px;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .bab-inst-btn[aria-pressed="true"] {
+    --c: var(--teal);
+    --c-deep: var(--teal-deep);
+    color: var(--cream);
+    outline: 3px dashed var(--cream);
+    outline-offset: -7px;
+  }
+
+  .bab-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin: 1.6rem 0 0.75rem;
+  }
+
+  .bab-play {
+    --c: var(--orange);
+    --c-deep: var(--orange-deep);
+    font-size: 1.25rem;
+    padding: 0.65rem 1.6rem 0.6rem;
+  }
+
+  .bab-shuffle,
+  .bab-clear {
+    --c: var(--cream);
+    --c-deep: var(--cream-deep);
+    color: var(--ink);
+  }
+
+  .bab-status {
+    min-height: 1.6em;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+
+  .bab-ghost {
+    position: fixed;
+    z-index: 50;
+    width: 96px;
+    height: 64px;
+    pointer-events: none;
+    transform: translate(-50%, -60%) rotate(-8deg);
+    filter: drop-shadow(0 8px 8px rgba(70, 40, 20, 0.3));
+  }
+
+  .bab-ghost svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  @media (max-width: 600px) {
+    .bab-band {
+      grid-template-columns: repeat(6, 1fr);
+      row-gap: 0.4rem;
+    }
+
+    .bab-band li {
+      grid-column: span 2;
+    }
+
+    .bab-band li:nth-child(4) {
+      grid-column: 2 / span 2;
+    }
+
+    .bab-floor {
+      display: none;
+    }
+
+    .bab-tray {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bab-eyes,
+    .bab-player.boing svg {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  type InstId = 'piano' | 'bass' | 'electric' | 'acoustic' | 'banjo' | 'drums';
+  type Slung = 'electric' | 'acoustic' | 'bass' | 'banjo';
+  interface Pt { x: number; y: number }
+
+  const INSTRUMENTS: InstId[] = ['piano', 'bass', 'electric', 'acoustic', 'banjo', 'drums'];
+  const LABELS: Record<InstId, string> = {
+    piano: 'piano', bass: 'bass', electric: 'electric guitar', acoustic: 'acoustic guitar', banjo: 'banjo', drums: 'drums',
+  };
+  const STORAGE_KEY = 'mbg-bandmates';
+
+  /** Four bars of G–D–Em–C in sixteenth notes. */
+  const LOOP = 64;
+  const BPM = 112;
+  const STEP = 60 / BPM / 4;
+
+  const P = (x: number, y: number): Pt => ({ x, y });
+  const lerp = (a: Pt, b: Pt, t: number): Pt => P(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  const smooth = (t: number) => t * t * (3 - 2 * t);
+  const wrap = (s: number) => ((s % LOOP) + LOOP) % LOOP;
+  function rotate(p: Pt, deg: number): Pt {
+    const r = (deg * Math.PI) / 180;
+    return P(p.x * Math.cos(r) - p.y * Math.sin(r), p.x * Math.sin(r) + p.y * Math.cos(r));
+  }
+
+  // ---------- Poses ----------
+
+  /**
+   * Where each slung instrument hangs on a player, plus how its hands move:
+   * the strumming hand rocks across the strings and the fretting hand
+   * slides up the neck for each chord.
+   */
+  const SLUNG: Record<Slung, { at: Pt; rot: number; strum: Pt; amp: number; period: number; frets: number[] }> = {
+    electric: { at: P(90, 190), rot: -24, strum: P(-4, 0), amp: 9, period: 2, frets: [62, 72, 56, 48] },
+    acoustic: { at: P(88, 192), rot: -24, strum: P(6, 0), amp: 11, period: 4, frets: [56, 64, 50, 46] },
+    bass: { at: P(80, 194), rot: -26, strum: P(-6, 0), amp: 5, period: 2, frets: [70, 82, 76, 62] },
+    banjo: { at: P(90, 190), rot: -22, strum: P(-6, 4), amp: 3.5, period: 1, frets: [60, 70, 54, 48] },
+  };
+  const FIXED_AT: Record<'piano' | 'drums', Pt> = { piano: P(100, 200), drums: P(100, 252) };
+  const SHOULDERS: [Pt, Pt] = [P(73, 126), P(127, 126)];
+  const REST: [Pt, Pt] = [P(64, 196), P(136, 196)];
+  /** Drummers sit down behind the kit. */
+  const SEAT = 14;
+
+  interface HandEvent { step: number; at: Pt }
+
+  /** Repeat a one-bar pattern of events across the four-bar loop. */
+  function everyBar(steps: number[], at: (bar: number, step: number) => Pt): HandEvent[] {
+    const out: HandEvent[] = [];
+    for (let bar = 0; bar < 4; bar++) for (const s of steps) out.push({ step: bar * 16 + s, at: at(bar, s) });
+    return out;
+  }
+
+  // Drums: stick tips land on these (world coordinates).
+  const HIHAT = P(32, 194);
+  const SNARE = P(146, 212);
+  const TOM = P(92, 200);
+  const CRASH = P(160, 172);
+  const STICK: [Pt, Pt] = [P(-20, 10), P(20, 10)];
+  const isFill = (step: number) => step >= 60;
+
+  const DRUM_HANDS: [HandEvent[], HandEvent[]] = [
+    // Left hand rides the hi-hat, then joins the tom fill at the end of the loop.
+    [
+      ...everyBar([0, 2, 4, 6, 8, 10, 12, 14], () => HIHAT).filter((e) => !isFill(e.step)),
+      { step: 61, at: TOM },
+      { step: 63, at: TOM },
+    ],
+    // Right hand: backbeat on the snare, a crash at the top, toms in the fill.
+    [
+      { step: 0, at: CRASH },
+      ...everyBar([4, 12], () => SNARE).filter((e) => !isFill(e.step)),
+      { step: 60, at: TOM },
+      { step: 62, at: TOM },
+    ],
+  ].map((events) => events.sort((a, b) => a.step - b.step)) as [HandEvent[], HandEvent[]];
+
+  const PIANO_HANDS: [HandEvent[], HandEvent[]] = [
+    everyBar([0, 8], (bar) => P([62, 72, 66, 56][bar], 194)),
+    everyBar([0, 6, 10], (bar, s) => P([128, 138, 132, 122][bar] + (s === 6 ? 4 : 0), 194)),
+  ];
+
+  const CLAPS: HandEvent[] = everyBar([4, 12], () => P(100, 170));
+
+  /** Where a hand is between hits: down on each hit, swinging up in between. */
+  function between(events: HandEvent[], s: number): { at: Pt; lift: number } {
+    const m = wrap(s);
+    let i = events.length - 1;
+    while (i >= 0 && events[i].step > m) i--;
+    const last = i >= 0 ? events[i] : { ...events[events.length - 1], step: events[events.length - 1].step - LOOP };
+    const nextRaw = events[(i + 1) % events.length];
+    const next = i + 1 < events.length ? nextRaw : { ...nextRaw, step: nextRaw.step + LOOP };
+    const gap = next.step - last.step;
+    const frac = gap > 0 ? (m - last.step) / gap : 0;
+    return { at: lerp(last.at, next.at, smooth(frac)), lift: Math.sin(Math.PI * frac) * Math.min(1, gap / 2) };
+  }
+
+  function placeSlung(id: Slung, local: Pt): Pt {
+    const g = SLUNG[id];
+    const r = rotate(local, g.rot);
+    return P(g.at.x + r.x, g.at.y + r.y);
+  }
+
+  /** Point at t along a quadratic curve, and the control point of the piece before it. */
+  function splitQuad(a: Pt, c: Pt, b: Pt, t: number): [Pt, Pt] {
+    const ac = lerp(a, c, t);
+    return [ac, lerp(ac, lerp(c, b, t), t)];
+  }
+
+  // ---------- Players ----------
+
+  interface Arm {
+    paths: SVGPathElement[];
+    sleeves: SVGPathElement[];
+    hand: SVGCircleElement;
+    stick: SVGLineElement;
+  }
+
+  interface Player {
+    name: string;
+    button: HTMLButtonElement;
+    body: SVGGElement;
+    head: SVGGElement;
+    instG: SVGGElement;
+    use: SVGUseElement;
+    arms: SVGGElement;
+    arm: [Arm, Arm];
+    smile: SVGPathElement;
+    sing: SVGEllipseElement;
+    inst: InstId | null;
+    /** A little personality in how each one bops. */
+    bob: number;
+    nod: number;
+  }
+
+  const root = document.querySelector<HTMLElement>('.bab')!;
+  const status = root.querySelector<HTMLElement>('.bab-status')!;
+  const playBtn = root.querySelector<HTMLButtonElement>('.bab-play')!;
+  const trayBtns = [...root.querySelectorAll<HTMLButtonElement>('.bab-inst-btn')];
+
+  const players: Player[] = [...root.querySelectorAll<HTMLButtonElement>('.bab-player')].map((button, i) => {
+    const arm = [...button.querySelectorAll<SVGGElement>('.bab-arm')].map((g) => ({
+      paths: [g.querySelector<SVGPathElement>('.bab-arm-out')!, g.querySelector<SVGPathElement>('.bab-arm-in')!],
+      sleeves: [g.querySelector<SVGPathElement>('.bab-sleeve-out')!, g.querySelector<SVGPathElement>('.bab-sleeve-in')!],
+      hand: g.querySelector<SVGCircleElement>('.bab-hand')!,
+      stick: g.querySelector<SVGLineElement>('.bab-stick')!,
+    })) as [Arm, Arm];
+    return {
+      name: button.dataset.name!,
+      button,
+      body: button.querySelector<SVGGElement>('.bab-body')!,
+      head: button.querySelector<SVGGElement>('.bab-head')!,
+      instG: button.querySelector<SVGGElement>('.bab-inst')!,
+      use: button.querySelector<SVGUseElement>('.bab-inst use')!,
+      arms: button.querySelector<SVGGElement>('.bab-arms')!,
+      arm,
+      smile: button.querySelector<SVGPathElement>('.bab-smile')!,
+      sing: button.querySelector<SVGEllipseElement>('.bab-sing')!,
+      inst: null,
+      bob: [3, 4, 2.5, 3.5, 5][i % 5],
+      nod: [4, -5, 6, 3, -4][i % 5],
+    };
+  });
+
+  function setArm(arm: Arm, shoulder: Pt, hand: Pt, outward: number) {
+    const dx = hand.x - shoulder.x;
+    const dy = hand.y - shoulder.y;
+    const len = Math.hypot(dx, dy) || 1;
+    // Noodle arms: the shorter the reach, the more the elbow bows out.
+    const bend = Math.max(8, (84 - len) * 0.55);
+    let n = P(-dy / len, dx / len);
+    if (n.x * outward < 0) n = P(-n.x, -n.y);
+    const ctrl = P((shoulder.x + hand.x) / 2 + n.x * bend, (shoulder.y + hand.y) / 2 + n.y * bend);
+    const d = `M${shoulder.x.toFixed(1)} ${shoulder.y.toFixed(1)} Q${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)} ${hand.x.toFixed(1)} ${hand.y.toFixed(1)}`;
+    const [sc, se] = splitQuad(shoulder, ctrl, hand, 0.3);
+    const sleeve = `M${shoulder.x.toFixed(1)} ${shoulder.y.toFixed(1)} Q${sc.x.toFixed(1)} ${sc.y.toFixed(1)} ${se.x.toFixed(1)} ${se.y.toFixed(1)}`;
+    for (const p of arm.paths) p.setAttribute('d', d);
+    for (const p of arm.sleeves) p.setAttribute('d', sleeve);
+    arm.hand.setAttribute('cx', hand.x.toFixed(1));
+    arm.hand.setAttribute('cy', hand.y.toFixed(1));
+  }
+
+  /** Put a player in their pose at song position s (in sixteenth notes). */
+  function pose(p: Player, s: number, playing: boolean) {
+    const beat = (Math.PI * s) / 4;
+    const bob = playing ? -p.bob * Math.abs(Math.sin(beat)) : 0;
+    const y = (p.inst === 'drums' ? SEAT : 0) + bob;
+    const hands: [Pt, Pt] = [REST[0], REST[1]];
+    const sticks: (Pt | null)[] = [null, null];
+    let instY = 0;
+
+    if (p.inst === 'drums' || p.inst === 'piano') {
+      const events = p.inst === 'drums' ? DRUM_HANDS : PIANO_HANDS;
+      for (const h of [0, 1] as const) {
+        const { at, lift } = playing ? between(events[h], s) : { at: events[h][0].at, lift: 0 };
+        if (p.inst === 'drums') {
+          // The hand sits back up the stick from where the tip lands.
+          const hand = P(at.x - STICK[h].x, at.y - STICK[h].y - lift * 20);
+          const tip = rotate(STICK[h], (h === 0 ? 1 : -1) * lift * 35);
+          hands[h] = P(hand.x, hand.y - y);
+          sticks[h] = P(hand.x + tip.x, hand.y + tip.y - y);
+        } else {
+          hands[h] = P(at.x, at.y - lift * 12 - y);
+        }
+      }
+    } else if (p.inst) {
+      const g = SLUNG[p.inst];
+      const t = playing ? s : 0;
+      const strum = g.amp * Math.cos((2 * Math.PI * t) / g.period);
+      hands[0] = placeSlung(p.inst, P(g.strum.x + (p.inst === 'bass' ? strum * 0.6 : 0), g.strum.y + strum));
+      // Slide up the neck right at the chord change.
+      const bar = Math.floor(wrap(t) / 16);
+      const into = smooth(Math.max(0, (wrap(t) % 16) - 15));
+      const fret = g.frets[bar] + (g.frets[(bar + 1) % 4] - g.frets[bar]) * into;
+      hands[1] = placeSlung(p.inst, P(fret + (playing ? 1.5 * Math.sin(Math.PI * t) : 0), 5));
+      instY = y;
+    } else if (playing) {
+      const { lift } = between(CLAPS, s);
+      const apart = 5 + lift * 24;
+      hands[0] = P(100 - apart, 170 - lift * 8);
+      hands[1] = P(100 + apart, 170 - lift * 8);
+    }
+
+    p.body.setAttribute('transform', `translate(0 ${y.toFixed(2)})`);
+    p.arms.setAttribute('transform', `translate(0 ${y.toFixed(2)})`);
+    p.instG.setAttribute('transform', `translate(0 ${instY.toFixed(2)})`);
+    p.head.setAttribute('transform', playing ? `rotate(${(p.nod * Math.sin(beat)).toFixed(2)} 100 112)` : '');
+
+    setArm(p.arm[0], SHOULDERS[0], hands[0], -1);
+    setArm(p.arm[1], SHOULDERS[1], hands[1], 1);
+    for (const h of [0, 1] as const) {
+      const stick = p.arm[h].stick;
+      const tip = sticks[h];
+      stick.setAttribute('visibility', tip ? 'visible' : 'hidden');
+      if (tip) {
+        stick.setAttribute('x1', hands[h].x.toFixed(1));
+        stick.setAttribute('y1', hands[h].y.toFixed(1));
+        stick.setAttribute('x2', tip.x.toFixed(1));
+        stick.setAttribute('y2', tip.y.toFixed(1));
+      }
+    }
+
+    // Empty-handed bandmates sing along.
+    const singing = playing && !p.inst;
+    p.smile.setAttribute('visibility', singing ? 'hidden' : 'visible');
+    p.sing.setAttribute('visibility', singing ? 'visible' : 'hidden');
+    if (singing) p.sing.setAttribute('ry', (1.5 + 5 * Math.abs(Math.sin((Math.PI * s) / 2))).toFixed(2));
+  }
+
+  function give(p: Player, inst: InstId | null) {
+    p.inst = inst;
+    p.use.setAttribute('href', inst ? `#inst-${inst}` : '');
+    p.use.setAttribute('visibility', inst ? 'visible' : 'hidden');
+    if (inst === 'drums' || inst === 'piano') {
+      p.use.setAttribute('transform', `translate(${FIXED_AT[inst].x} ${FIXED_AT[inst].y})`);
+    } else if (inst) {
+      const g = SLUNG[inst];
+      p.use.setAttribute('transform', `translate(${g.at.x} ${g.at.y}) rotate(${g.rot})`);
+    }
+    p.button.setAttribute('aria-label', `${p.name}: ${inst ? LABELS[inst] : 'empty-handed'}`);
+    if (!band.playing) pose(p, 0, false);
+  }
+
+  function boing(p: Player) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    p.button.classList.remove('boing');
+    void p.button.offsetWidth;
+    p.button.classList.add('boing');
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(players.map((p) => p.inst)));
+    } catch {}
+  }
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (Array.isArray(saved)) {
+        saved.forEach((inst, i) => {
+          if (players[i] && INSTRUMENTS.includes(inst)) give(players[i], inst);
+        });
+      }
+    } catch {}
+  }
+
+  // ---------- Sound ----------
+
+  const midiHz = (m: number) => 440 * 2 ** ((m - 69) / 12);
+
+  const CHORDS = [
+    { bass: 43, piano: [55, 59, 62], power: 43, strum: [43, 47, 50, 55, 59, 67], banjo: [62, 67, 71, 74] },
+    { bass: 38, piano: [54, 57, 62], power: 50, strum: [50, 57, 62, 66], banjo: [62, 66, 69, 74] },
+    { bass: 40, piano: [52, 55, 59], power: 40, strum: [40, 47, 52, 55, 59, 64], banjo: [64, 67, 71, 76] },
+    { bass: 36, piano: [52, 55, 60], power: 48, strum: [48, 52, 55, 60, 64], banjo: [64, 67, 72, 76] },
+  ];
+  const BASS_LINE: Record<number, number> = { 0: 0, 3: 0, 6: 12, 8: 0, 10: 7, 14: 12 };
+  const STRUMS: Record<number, 'down' | 'up'> = { 0: 'down', 4: 'down', 6: 'up', 10: 'up', 12: 'down', 14: 'up' };
+  const ROLL = [1, 2, 3, 0, 2, 3, 1, 3];
+  const TOMS: Record<number, number> = { 60: 200, 61: 170, 62: 140, 63: 115 };
+
+  class Band {
+    ctx: AudioContext | null = null;
+    out!: GainNode;
+    noise!: AudioBuffer;
+    curve!: Float32Array<ArrayBuffer>;
+    plucks = new Map<string, AudioBuffer>();
+    playing = false;
+    t0 = 0;
+    step = 0;
+    timer = 0;
+
+    private init() {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = (this.ctx = new AC());
+      const comp = ctx.createDynamicsCompressor();
+      this.out = ctx.createGain();
+      this.out.gain.value = 0.6;
+      this.out.connect(comp).connect(ctx.destination);
+      this.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const n = this.noise.getChannelData(0);
+      for (let i = 0; i < n.length; i++) n[i] = Math.random() * 2 - 1;
+      this.curve = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) {
+        const x = (i / 1023) * 2 - 1;
+        this.curve[i] = Math.tanh(x * 6);
+      }
+    }
+
+    start() {
+      if (!this.ctx) this.init();
+      const ctx = this.ctx!;
+      void ctx.resume();
+      this.t0 = ctx.currentTime + 0.08;
+      this.step = 0;
+      this.playing = true;
+      this.tick();
+    }
+
+    stop() {
+      this.playing = false;
+      clearTimeout(this.timer);
+    }
+
+    /** Song position in sixteenth notes. */
+    position() {
+      return this.ctx ? Math.max(0, (this.ctx.currentTime - this.t0) / STEP) : 0;
+    }
+
+    private tick = () => {
+      const ctx = this.ctx!;
+      while (this.t0 + this.step * STEP < ctx.currentTime + 0.12) {
+        this.play(this.step, this.t0 + this.step * STEP);
+        this.step++;
+      }
+      this.timer = window.setTimeout(this.tick, 25);
+    };
+
+    private env(t: number, peak: number, decay: number, attack = 0.004): GainNode {
+      const g = this.ctx!.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + attack);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+      g.connect(this.out);
+      return g;
+    }
+
+    private osc(type: OscillatorType, hz: number, t: number, dur: number, into: AudioNode, detune = 0) {
+      const o = this.ctx!.createOscillator();
+      o.type = type;
+      o.frequency.value = hz;
+      o.detune.value = detune;
+      o.connect(into);
+      o.start(t);
+      o.stop(t + dur + 0.05);
+      return o;
+    }
+
+    private hiss(t: number, dur: number, filter: BiquadFilterType, hz: number, into: AudioNode, q = 0.7) {
+      const ctx = this.ctx!;
+      const src = ctx.createBufferSource();
+      src.buffer = this.noise;
+      const f = ctx.createBiquadFilter();
+      f.type = filter;
+      f.frequency.value = hz;
+      f.Q.value = q;
+      src.connect(f).connect(into);
+      src.start(t, Math.random() * 0.5);
+      src.stop(t + dur + 0.05);
+    }
+
+    private kick(t: number) {
+      const o = this.osc('sine', 150, t, 0.4, this.env(t, 0.9, 0.38, 0.002));
+      o.frequency.setValueAtTime(150, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    }
+
+    private tom(t: number, hz: number) {
+      const o = this.osc('sine', hz, t, 0.35, this.env(t, 0.6, 0.32, 0.002));
+      o.frequency.exponentialRampToValueAtTime(hz * 0.6, t + 0.25);
+    }
+
+    /** Karplus–Strong: a burst of noise that rings round a short delay loop like a plucked string. */
+    private pluck(t: number, midi: number, kind: 'acoustic' | 'banjo', gain: number) {
+      const ctx = this.ctx!;
+      const key = `${kind}${midi}`;
+      let buf = this.plucks.get(key);
+      if (!buf) {
+        const banjo = kind === 'banjo';
+        const sr = ctx.sampleRate;
+        const len = Math.floor(sr * (banjo ? 0.8 : 1.8));
+        const period = Math.max(2, Math.round(sr / midiHz(midi)));
+        buf = ctx.createBuffer(1, len, sr);
+        const out = buf.getChannelData(0);
+        const ring = new Float32Array(period);
+        let prev = 0;
+        for (let i = 0; i < period; i++) {
+          prev = (banjo ? 0.9 : 0.55) * (Math.random() * 2 - 1) + (banjo ? 0.1 : 0.45) * prev;
+          ring[i] = prev;
+        }
+        const decay = banjo ? 0.985 : 0.996;
+        for (let i = 0, j = 0; i < len; i++) {
+          const k = (j + 1) % period;
+          out[i] = ring[j];
+          ring[j] = decay * 0.5 * (ring[j] + ring[k]);
+          j = k;
+        }
+        this.plucks.set(key, buf);
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const g = ctx.createGain();
+      g.gain.value = gain;
+      src.connect(g).connect(this.out);
+      src.start(t);
+    }
+
+    private play(step: number, t: number) {
+      const active = new Set(players.map((p) => p.inst));
+      const s = step % 16;
+      const loopStep = step % LOOP;
+      const chord = CHORDS[Math.floor(loopStep / 16)];
+
+      if (active.has('drums')) {
+        if ([0, 8, 10].includes(s)) this.kick(t);
+        if (loopStep in TOMS) this.tom(t, TOMS[loopStep]);
+        else {
+          if (s === 4 || s === 12) {
+            this.hiss(t, 0.18, 'highpass', 1200, this.env(t, 0.45, 0.16, 0.002));
+            this.osc('triangle', 185, t, 0.1, this.env(t, 0.3, 0.09, 0.002));
+          }
+          if (s % 2 === 0) this.hiss(t, 0.05, 'highpass', 7500, this.env(t, s % 4 ? 0.12 : 0.2, 0.045, 0.002));
+        }
+        if (loopStep === 0) this.hiss(t, 1.4, 'highpass', 5000, this.env(t, 0.28, 1.3, 0.002));
+      }
+
+      if (active.has('bass') && s in BASS_LINE) {
+        const ctx = this.ctx!;
+        const f = ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.Q.value = 3;
+        f.frequency.setValueAtTime(1400, t);
+        f.frequency.exponentialRampToValueAtTime(380, t + 0.2);
+        f.connect(this.env(t, 0.42, 0.32, 0.006));
+        const hz = midiHz(chord.bass + BASS_LINE[s]);
+        this.osc('sawtooth', hz, t, 0.34, f);
+        this.osc('sine', hz, t, 0.34, f);
+      }
+
+      if (active.has('piano')) {
+        const notes = s === 0 ? chord.piano : s === 6 || s === 10 ? chord.piano.map((n) => n + 12) : [];
+        const lh = s === 0 || s === 8 ? [chord.bass + 12] : [];
+        for (const n of [...notes, ...lh]) {
+          const decay = s === 0 ? 1.6 : 0.6;
+          this.osc('triangle', midiHz(n), t, decay, this.env(t, s === 0 ? 0.16 : 0.1, decay, 0.005));
+          this.osc('sine', midiHz(n) * 2, t, decay, this.env(t, 0.04, decay * 0.6, 0.005));
+        }
+      }
+
+      if (active.has('electric') && s % 2 === 0) {
+        const ctx = this.ctx!;
+        const shaper = ctx.createWaveShaper();
+        shaper.curve = this.curve;
+        shaper.oversample = '2x';
+        const f = ctx.createBiquadFilter();
+        f.type = 'lowpass';
+        f.frequency.value = 2400;
+        const long = s === 0;
+        shaper.connect(f).connect(this.env(t, long ? 0.13 : 0.09, long ? 0.9 : 0.16, 0.004));
+        const pre = ctx.createGain();
+        pre.gain.value = 0.35;
+        pre.connect(shaper);
+        for (const n of [chord.power, chord.power + 7, chord.power + 12]) {
+          this.osc('sawtooth', midiHz(n), t, long ? 1 : 0.2, pre, -7);
+          this.osc('sawtooth', midiHz(n), t, long ? 1 : 0.2, pre, 7);
+        }
+      }
+
+      if (active.has('acoustic') && s in STRUMS) {
+        const up = STRUMS[s] === 'up';
+        const strings = up ? chord.strum.slice(-4).reverse() : chord.strum;
+        strings.forEach((n, i) => this.pluck(t + i * 0.012, n, 'acoustic', up ? 0.16 : 0.24));
+      }
+
+      if (active.has('banjo')) this.pluck(t, chord.banjo[ROLL[s % 8]], 'banjo', s % 8 === 0 ? 0.3 : 0.2);
+
+      if (active.has(null) && (s === 4 || s === 12)) {
+        const g = this.ctx!.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        for (const d of [0, 0.011, 0.022]) {
+          g.gain.setValueAtTime(0.35, t + d);
+          g.gain.exponentialRampToValueAtTime(0.05, t + d + 0.009);
+        }
+        g.gain.setValueAtTime(0.35, t + 0.031);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+        g.connect(this.out);
+        this.hiss(t, 0.2, 'bandpass', 1400, g, 1.2);
+      }
+    }
+  }
+
+  const band = new Band();
+  let frame = 0;
+
+  function animate() {
+    const s = band.position();
+    for (const p of players) pose(p, s, true);
+    frame = requestAnimationFrame(animate);
+  }
+
+  function setPlaying(on: boolean) {
+    if (on === band.playing) return;
+    if (on) {
+      band.start();
+      frame = requestAnimationFrame(animate);
+    } else {
+      band.stop();
+      cancelAnimationFrame(frame);
+      for (const p of players) pose(p, 0, false);
+    }
+    playBtn.setAttribute('aria-pressed', String(on));
+    playBtn.querySelector('span')!.textContent = on ? 'Stop' : 'Play';
+    playBtn.querySelector('.bab-play-icon')!.setAttribute('d', on ? 'M6 5h4v14H6zM14 5h4v14h-4z' : 'M7 4l13 8-13 8z');
+    if (on) {
+      const playing = players.filter((p) => p.inst).length;
+      status.textContent = playing ? 'Take it away!' : 'No instruments yet, so everybody sings. Hand them something!';
+    }
+  }
+
+  // ---------- Handing out instruments ----------
+
+  let selected: InstId | null = null;
+
+  function select(inst: InstId | null) {
+    selected = inst;
+    for (const b of trayBtns) b.setAttribute('aria-pressed', String(b.dataset.inst === inst));
+    if (inst) status.textContent = `Who gets the ${LABELS[inst]}? Tap a bandmate.`;
+  }
+
+  function handTo(p: Player, inst: InstId) {
+    // Handing someone what they're already holding takes it back.
+    if (p.inst === inst) {
+      give(p, null);
+      status.textContent = `${p.name} put down the ${LABELS[inst]}.`;
+    } else {
+      give(p, inst);
+      status.textContent = `${p.name} picked up the ${LABELS[inst]}.`;
+    }
+    boing(p);
+    save();
+  }
+
+  for (const p of players) {
+    p.button.addEventListener('click', () => {
+      if (selected) handTo(p, selected);
+      else if (p.inst) status.textContent = `${p.name} is on ${LABELS[p.inst]}. Pick an instrument to swap it.`;
+      else status.textContent = `Pick an instrument for ${p.name} first.`;
+    });
+  }
+
+  // Drag an instrument from the tray straight onto someone.
+  let drag: { inst: InstId; id: number; x: number; y: number; ghost: HTMLElement | null; over: Player | null } | null = null;
+  let suppressClick = false;
+
+  const playerAt = (x: number, y: number) => {
+    const el = document.elementFromPoint(x, y)?.closest<HTMLElement>('.bab-player');
+    return el ? players[Number(el.dataset.player)] : null;
+  };
+
+  for (const b of trayBtns) {
+    const inst = b.dataset.inst as InstId;
+    b.addEventListener('click', () => {
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      select(selected === inst ? null : inst);
+    });
+    b.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      drag = { inst, id: e.pointerId, x: e.clientX, y: e.clientY, ghost: null, over: null };
+      b.setPointerCapture(e.pointerId);
+    });
+    b.addEventListener('pointermove', (e) => {
+      if (!drag || drag.id !== e.pointerId) return;
+      if (!drag.ghost) {
+        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+        drag.ghost = document.createElement('div');
+        drag.ghost.className = 'bab-ghost';
+        drag.ghost.appendChild(b.querySelector('svg')!.cloneNode(true));
+        root.appendChild(drag.ghost);
+      }
+      drag.ghost.style.left = `${e.clientX}px`;
+      drag.ghost.style.top = `${e.clientY}px`;
+      const over = playerAt(e.clientX, e.clientY);
+      if (over !== drag.over) {
+        drag.over?.button.classList.remove('is-target');
+        over?.button.classList.add('is-target');
+        drag.over = over;
+      }
+    });
+    const end = (e: PointerEvent) => {
+      if (!drag || drag.id !== e.pointerId) return;
+      if (drag.ghost) {
+        drag.ghost.remove();
+        drag.over?.button.classList.remove('is-target');
+        const target = e.type === 'pointerup' ? playerAt(e.clientX, e.clientY) : null;
+        if (target) {
+          handTo(target, drag.inst);
+          select(null);
+        }
+        suppressClick = true;
+        setTimeout(() => (suppressClick = false), 0);
+      }
+      drag = null;
+    };
+    b.addEventListener('pointerup', end);
+    b.addEventListener('pointercancel', end);
+  }
+
+  root.querySelector('.bab-shuffle')!.addEventListener('click', () => {
+    const deck = [...INSTRUMENTS].sort(() => Math.random() - 0.5);
+    players.forEach((p, i) => {
+      give(p, deck[i]);
+      boing(p);
+    });
+    select(null);
+    status.textContent = 'New lineup!';
+    save();
+  });
+
+  root.querySelector('.bab-clear')!.addEventListener('click', () => {
+    for (const p of players) give(p, null);
+    select(null);
+    status.textContent = 'Everybody put their instruments down.';
+    save();
+  });
+
+  playBtn.addEventListener('click', () => setPlaying(!band.playing));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') select(null);
+  });
+
+  // Background tabs throttle timers, which makes the band trip over itself.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) setPlaying(false);
+  });
+
+  for (const p of players) pose(p, 0, false);
+  load();
+</script>
