@@ -38,7 +38,7 @@ const colors = [
     Your fridge will thank you.
   </p>
 
-  <section class="macpaint" aria-label="MBG* Paint drawing program">
+  <section class="macpaint clay" aria-label="MBG* Paint drawing program">
     <div class="mp-titlebar">
       <span class="mp-closebox" aria-hidden="true"></span>
       <span class="mp-title">MBG* Paint</span>
@@ -95,15 +95,20 @@ const colors = [
         </div>
       </div>
 
-      <div class="mp-stage" id="mp-stage">
-        <canvas id="mp-paint" width="1200" height="900"></canvas>
-        <canvas id="mp-lines" width="1200" height="900" aria-hidden="true"></canvas>
-        <canvas id="mp-overlay" width="1200" height="900" role="img" aria-label="Drawing canvas"></canvas>
+      <div class="mp-frame clay">
+        <div class="mp-stage" id="mp-stage">
+          <canvas id="mp-paint" width="1200" height="900"></canvas>
+          <canvas id="mp-lines" width="1200" height="900" aria-hidden="true"></canvas>
+          <div class="mp-grain" aria-hidden="true"></div>
+          <canvas id="mp-overlay" width="1200" height="900" role="img" aria-label="Drawing canvas"></canvas>
+        </div>
       </div>
     </div>
 
     <div class="mp-palette">
-      <canvas class="mp-current" id="mp-current" width="96" height="64" title="Current color and pattern"></canvas>
+      <span class="mp-current-frame clay">
+        <canvas class="mp-current" id="mp-current" width="96" height="64" title="Current color and pattern"></canvas>
+      </span>
       <div class="mp-patterns" id="mp-patterns" role="radiogroup" aria-label="Patterns"></div>
       <div class="mp-colors" role="radiogroup" aria-label="Colors">
         {colors.map((color, i) => (
@@ -113,7 +118,7 @@ const colors = [
             aria-checked={i === 11 ? 'true' : 'false'}
             data-color={color}
             aria-label={`Color ${color}`}
-            style={`background: ${color}`}
+            style={`--swatch: ${color}`}
           ></button>
         ))}
         <label class="mp-custom" title="Pick any color">
@@ -721,193 +726,298 @@ const colors = [
 </script>
 
 <style>
+  /*
+   * The whole program is sculpted from the same clay as the rest of the site:
+   * a cream slab for the window, little pressable lumps for every control,
+   * and clay balls for the paint pots.
+   */
   .macpaint {
-    --mp-ink: #000;
+    --c: var(--cream);
+    --c-deep: var(--cream-deep);
+    --lift: 8px;
+    --blob: 34px 24px 38px 22px / 24px 34px 22px 38px;
     position: relative;
     left: 50%;
     width: min(1080px, calc(100vw - 2rem));
     transform: translateX(-50%);
-    margin-bottom: 1.5rem;
-    background: #fff;
-    color: var(--mp-ink);
-    border: 2px solid var(--mp-ink);
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.85);
-    font-family: "Chicago", "ChicagoFLF", "Charcoal", var(--font-display);
+    margin-bottom: 2.25rem;
+    padding: 0.75rem;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 600;
     font-size: 0.95rem;
     line-height: 1.2;
     user-select: none;
     -webkit-user-select: none;
   }
 
-  /* Pinstriped title bar with a close box. */
+  /* A pressable lump of clay. --press squishes it onto the table. */
+  .mp-menubar button,
+  .mp-field select,
+  .mp-tools button,
+  .mp-sizes button,
+  .mp-patterns :global(button) {
+    --c: var(--paper);
+    --c-deep: var(--cream-deep);
+    --lift: 4px;
+    --press: 0px;
+    --blob: 12px 9px 13px 8px / 9px 12px 8px 13px;
+    border: 0;
+    color: var(--ink);
+    background: var(--clay-texture) 0 0 / 240px, var(--c);
+    background-blend-mode: soft-light, normal;
+    border-radius: var(--blob);
+    box-shadow:
+      inset 2px 3px 4px rgba(255, 255, 255, 0.45),
+      inset -2px -3px 5px rgba(0, 0, 0, 0.14),
+      0 calc(var(--lift) - var(--press)) 0 var(--c-deep),
+      0 calc(var(--lift) - var(--press) + 5px) calc(10px - var(--press) * 2) rgba(70, 40, 20, 0.22);
+    transform: translateY(var(--press)) rotate(var(--tilt, 0deg));
+    transition: transform 120ms ease, box-shadow 120ms ease;
+    cursor: pointer;
+  }
+
+  .mp-menubar button:hover:not(:disabled),
+  .mp-tools button:hover,
+  .mp-sizes button:hover,
+  .mp-patterns :global(button:hover) {
+    --press: 2px;
+  }
+
+  .mp-menubar button:active:not(:disabled),
+  .mp-tools button:active,
+  .mp-sizes button:active,
+  .mp-patterns :global(button:active) {
+    --press: var(--lift);
+  }
+
+  /* The chosen tool is a teal lump pressed flat into the table. */
+  .mp-tools button[aria-checked="true"],
+  .mp-sizes button[aria-checked="true"],
+  .mp-patterns :global(button[aria-checked="true"]) {
+    --c: var(--teal);
+    --c-deep: var(--teal-deep);
+    --press: 3px;
+    color: var(--cream);
+  }
+
+  .mp-tools button:nth-child(4n + 1) { --tilt: -2deg; --blob: 14px 9px 12px 10px / 10px 13px 9px 14px; }
+  .mp-tools button:nth-child(4n + 2) { --tilt: 1.5deg; --blob: 9px 14px 10px 12px / 13px 9px 14px 10px; }
+  .mp-tools button:nth-child(4n + 3) { --tilt: 1deg; --blob: 12px 10px 14px 9px / 9px 14px 10px 12px; }
+  .mp-tools button:nth-child(4n) { --tilt: -1.5deg; --blob: 10px 13px 9px 14px / 14px 10px 13px 9px; }
+
+  /* Title bar: an orange clay strip with grooves dragged through it. */
   .mp-titlebar {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 26px;
-    padding: 4px 6px;
-    border-bottom: 2px solid var(--mp-ink);
-    background: repeating-linear-gradient(var(--mp-ink) 0 1.5px, #fff 1.5px 3px) content-box;
+    height: 40px;
+    margin-bottom: 0.75rem;
+    border-radius: 16px 11px 18px 10px / 11px 16px 10px 18px;
+    background:
+      repeating-linear-gradient(
+        180deg,
+        transparent 0 5px,
+        rgba(0, 0, 0, 0.16) 5px 6.5px,
+        rgba(255, 255, 255, 0.22) 6.5px 8px
+      ) center / 100% 24px no-repeat,
+      var(--clay-texture) 0 0 / 240px,
+      var(--orange);
+    background-blend-mode: normal, soft-light, normal;
+    box-shadow:
+      inset 3px 4px 6px rgba(255, 255, 255, 0.35),
+      inset -3px -5px 8px rgba(0, 0, 0, 0.18),
+      0 4px 0 var(--orange-deep);
   }
 
   .mp-closebox {
     position: absolute;
-    left: 14px;
-    width: 14px;
-    height: 14px;
-    background: #fff;
-    border: 1.5px solid var(--mp-ink);
-    box-shadow: 0 0 0 3px #fff;
+    left: 16px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.7), transparent 50%),
+      var(--clay-texture) 0 0 / 120px,
+      var(--cream);
+    background-blend-mode: normal, soft-light, normal;
+    box-shadow: inset -2px -3px 4px rgba(0, 0, 0, 0.2), 0 3px 0 var(--orange-deep);
   }
 
   .mp-title {
-    padding: 0 0.6rem;
-    background: #fff;
+    padding: 0.15rem 0.9rem 0.1rem;
+    color: var(--cream);
+    font-size: 1.15rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 1px 2px 0 var(--orange-deep);
+    border-radius: 12px 9px 13px 8px / 9px 12px 8px 13px;
+    background: var(--clay-texture) 0 0 / 240px, var(--orange);
+    background-blend-mode: soft-light, normal;
   }
 
   .mp-menubar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 0.35rem;
-    padding: 0.35rem 0.5rem;
-    border-bottom: 2px solid var(--mp-ink);
+    gap: 0.6rem 0.5rem;
+    padding: 0 0.15rem 0.85rem;
   }
 
   .mp-menubar button {
     font: inherit;
-    color: inherit;
-    background: #fff;
-    border: 0;
-    padding: 0.2rem 0.55rem;
-    cursor: pointer;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.8rem 0.35rem;
   }
 
-  .mp-menubar button:hover:not(:disabled),
-  .mp-menubar button:focus-visible {
-    background: var(--mp-ink);
-    color: #fff;
-    outline: none;
+  .mp-menubar button:nth-child(odd) { --tilt: -1deg; }
+  .mp-menubar button:nth-child(even) { --tilt: 1deg; }
+
+  .mp-menubar button[data-action="save"],
+  .mp-menubar button[data-action="print"] {
+    --c: var(--orange);
+    --c-deep: var(--orange-deep);
+    color: var(--cream);
   }
 
+  /* Disabled buttons are squashed flat and dusty. */
   .mp-menubar button:disabled {
-    color: #999;
+    --press: var(--lift);
+    opacity: 0.5;
     cursor: default;
   }
 
+  /* A little rolled snake of clay between groups. */
   .mp-sep {
-    width: 1px;
-    align-self: stretch;
-    background: var(--mp-ink);
-    margin: 0 0.25rem;
+    width: 6px;
+    height: 26px;
+    margin: 0 0.2rem;
+    border-radius: 999px;
+    background: var(--clay-texture) 0 0 / 240px, var(--cream-deep);
+    background-blend-mode: soft-light, normal;
+    box-shadow: inset 1px 2px 2px rgba(255, 255, 255, 0.4), inset -1px -2px 2px rgba(0, 0, 0, 0.18);
   }
 
   .mp-field {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0 0.35rem;
+    gap: 0.45rem;
+    padding: 0 0.25rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.9rem;
   }
 
   .mp-field select {
     font: inherit;
-    color: inherit;
-    background: #fff;
-    border: 1.5px solid var(--mp-ink);
-    border-radius: 0;
-    padding: 0.1rem 0.25rem;
-    box-shadow: 2px 2px 0 var(--mp-ink);
+    text-transform: none;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0.4rem 2rem 0.35rem 0.8rem;
+    background:
+      linear-gradient(45deg, transparent 50%, var(--ink) 50%) calc(100% - 15px) 52% / 6px 6px no-repeat,
+      linear-gradient(-45deg, transparent 50%, var(--ink) 50%) calc(100% - 9px) 52% / 6px 6px no-repeat,
+      var(--clay-texture) 0 0 / 240px,
+      var(--c);
+    background-blend-mode: normal, normal, soft-light, normal;
   }
 
   .mp-field input[type="checkbox"] {
-    accent-color: var(--mp-ink);
-    width: 1rem;
-    height: 1rem;
+    accent-color: var(--teal);
+    width: 1.15rem;
+    height: 1.15rem;
     margin: 0;
   }
 
   .mp-body {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 0.6rem;
-    padding: 0.6rem;
+    gap: 0.9rem;
   }
 
   .mp-side {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 1rem;
   }
 
   .mp-tools {
     display: grid;
-    grid-template-columns: repeat(2, 42px);
-    border: 1.5px solid var(--mp-ink);
-    gap: 1px;
-    background: var(--mp-ink);
-  }
-
-  .mp-tools button,
-  .mp-sizes button {
-    display: grid;
-    place-items: center;
-    padding: 0;
-    border: 0;
-    background: #fff;
-    color: var(--mp-ink);
-    cursor: pointer;
+    grid-template-columns: repeat(2, 44px);
+    gap: 10px 8px;
   }
 
   .mp-tools button {
-    height: 38px;
+    display: grid;
+    place-items: center;
+    height: 40px;
+    padding: 0;
   }
 
-  .mp-tools button[aria-checked="true"] {
-    background: var(--mp-ink);
-    color: #fff;
+  .mp-tools svg {
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.5));
   }
 
-  .mp-tools button:focus-visible,
-  .mp-sizes button:focus-visible,
-  .mp-patterns button:focus-visible,
-  .mp-colors button:focus-visible {
-    outline: 2px dashed var(--orange);
-    outline-offset: -4px;
+  .mp-tools button[aria-checked="true"] svg {
+    filter: drop-shadow(0 1px 0 var(--teal-deep));
   }
 
   .mp-sizes {
     display: flex;
     flex-direction: column;
-    border: 1.5px solid var(--mp-ink);
+    gap: 9px;
   }
 
   .mp-sizes button {
-    height: 22px;
+    display: grid;
+    place-items: center;
+    height: 26px;
+    padding: 0;
   }
 
+  .mp-sizes button:nth-child(odd) { --tilt: 1deg; }
+  .mp-sizes button:nth-child(even) { --tilt: -1deg; }
+
+  /* Line sizes are rolled clay snakes. */
   .mp-sizes button::before {
     content: "";
-    width: 70%;
-    height: var(--h);
-    background: var(--mp-ink);
+    width: 72%;
+    height: calc(var(--h) + 2px);
+    border-radius: 999px;
+    background: var(--clay-texture) 0 0 / 240px, var(--orange);
+    background-blend-mode: soft-light, normal;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 1px 0 var(--orange-deep);
   }
 
-  .mp-sizes button[aria-checked="true"] {
-    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3.5px var(--mp-ink);
+  .mp-sizes button[aria-checked="true"]::before {
+    background: var(--clay-texture) 0 0 / 240px, var(--cream);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.45), 0 1px 0 var(--teal-deep);
+  }
+
+  /* The paper sits in a thick clay rim. */
+  .mp-frame {
+    --c: var(--paper);
+    --lift: 5px;
+    --blob: 22px 16px 24px 14px / 16px 22px 14px 24px;
+    padding: 10px;
+    align-self: start;
   }
 
   .mp-stage {
     position: relative;
     aspect-ratio: 4 / 3;
-    border: 1.5px solid var(--mp-ink);
+    border-radius: 14px 10px 15px 9px / 10px 14px 9px 15px;
     background: #fff;
     overflow: hidden;
+    box-shadow: inset 0 0 0 2px var(--cream-deep);
   }
 
-  .mp-stage canvas {
+  .mp-stage canvas,
+  .mp-grain {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -916,6 +1026,15 @@ const colors = [
 
   .mp-stage canvas[hidden] {
     display: none;
+  }
+
+  /* Lumpy clay light over the drawing, so paint looks smeared onto clay. */
+  .mp-grain {
+    pointer-events: none;
+    background: var(--clay-texture) 0 0 / 240px;
+    mix-blend-mode: soft-light;
+    opacity: 0.75;
+    box-shadow: inset 3px 4px 10px rgba(70, 40, 20, 0.25);
   }
 
   #mp-overlay {
@@ -929,10 +1048,12 @@ const colors = [
 
   .mp-stage :global(.mp-text-input) {
     position: absolute;
+    z-index: 1;
     min-width: 8ch;
     margin: 0;
     padding: 0;
-    border: 1px dashed var(--mp-ink);
+    border: 2px dashed var(--teal);
+    border-radius: 6px;
     background: transparent;
     font-family: Fredoka, "Arial Rounded MT Bold", sans-serif;
     font-weight: 600;
@@ -944,74 +1065,106 @@ const colors = [
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.6rem;
-    border-top: 2px solid var(--mp-ink);
+    gap: 1rem 1.1rem;
+    padding: 1.1rem 0.15rem 0.35rem;
+  }
+
+  .mp-current-frame {
+    --c: var(--paper);
+    --lift: 5px;
+    --blob: 20px 14px 22px 12px / 14px 20px 12px 22px;
+    display: block;
+    padding: 7px;
+    transform: rotate(-2deg);
   }
 
   .mp-current {
+    display: block;
     width: 72px;
     height: 48px;
-    border: 1.5px solid var(--mp-ink);
-    box-shadow: 3px 3px 0 var(--mp-ink);
+    border-radius: 13px 9px 14px 8px / 9px 13px 8px 14px;
+    box-shadow: inset 0 0 0 1px rgba(70, 40, 20, 0.2);
   }
 
   .mp-patterns {
     display: grid;
-    grid-template-columns: repeat(7, 32px);
-    gap: 1px;
-    border: 1.5px solid var(--mp-ink);
-    background: var(--mp-ink);
+    grid-template-columns: repeat(7, 40px);
+    gap: 9px 7px;
   }
 
-  .mp-patterns button {
+  .mp-patterns :global(button) {
+    --blob: 10px 8px 11px 7px / 8px 10px 7px 11px;
     display: block;
-    padding: 0;
-    border: 0;
-    background: #fff;
-    cursor: pointer;
+    padding: 4px;
   }
 
-  .mp-patterns canvas {
+  .mp-patterns :global(button:nth-child(odd)) { --tilt: -1.5deg; }
+  .mp-patterns :global(button:nth-child(even)) { --tilt: 1.5deg; }
+
+  .mp-patterns :global(canvas) {
     display: block;
     width: 32px;
     height: 20px;
+    border-radius: 6px 4px 7px 4px / 4px 6px 4px 7px;
+    box-shadow: inset 0 0 0 1px rgba(70, 40, 20, 0.2);
   }
 
-  .mp-patterns button[aria-checked="true"] {
-    outline: 3px solid var(--mp-ink);
-    outline-offset: -3px;
-    box-shadow: inset 0 0 0 4.5px #fff;
-    position: relative;
-  }
-
-  .mp-patterns button[aria-checked="true"] canvas {
-    clip-path: inset(4px);
-  }
-
+  /* Paint pots: a ball of clay for each color. */
   .mp-colors {
     display: grid;
-    grid-template-columns: repeat(12, 24px);
-    gap: 3px;
+    grid-template-columns: repeat(12, 28px);
+    gap: 9px 7px;
   }
 
   .mp-colors button,
   .mp-custom {
-    width: 24px;
-    height: 24px;
+    --swatch: #fff;
+    --press: 0px;
+    width: 28px;
+    height: 28px;
     padding: 0;
-    border: 1.5px solid var(--mp-ink);
+    border: 0;
+    border-radius: 50% 46% 52% 44% / 46% 52% 44% 50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.6), transparent 45%),
+      var(--clay-texture) 0 0 / 120px,
+      var(--swatch);
+    background-blend-mode: normal, soft-light, normal;
+    box-shadow:
+      inset -2px -3px 5px rgba(0, 0, 0, 0.25),
+      0 calc(3px - var(--press)) 0 color-mix(in srgb, var(--swatch), #000 35%),
+      0 calc(7px - var(--press)) calc(8px - var(--press)) rgba(70, 40, 20, 0.25);
+    transform: translateY(var(--press)) scale(var(--squash, 1), calc(2 - var(--squash, 1)));
+    transition: transform 120ms ease, box-shadow 120ms ease;
     cursor: pointer;
   }
 
+  .mp-colors button:nth-child(3n + 1) { border-radius: 46% 52% 44% 50% / 52% 44% 50% 46%; }
+  .mp-colors button:nth-child(3n + 2) { border-radius: 52% 44% 50% 46% / 44% 50% 46% 52%; }
+
+  .mp-colors button:hover {
+    --press: 1px;
+  }
+
+  /* The picked ball gets squished and ringed with a teal snake. */
   .mp-colors button[aria-checked="true"] {
-    box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--mp-ink);
+    --press: 2px;
+    --squash: 1.12;
+    outline: 3px solid var(--teal);
+    outline-offset: 3px;
   }
 
   .mp-custom {
     position: relative;
     overflow: hidden;
-    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.6), transparent 45%),
+      var(--clay-texture) 0 0 / 120px,
+      conic-gradient(#e8202a, #ffd23f, #3fae49, #2f9be0, #9b4dca, #e8202a);
+    box-shadow:
+      inset -2px -3px 5px rgba(0, 0, 0, 0.25),
+      0 3px 0 #6b4a8a,
+      0 7px 8px rgba(70, 40, 20, 0.25);
   }
 
   .mp-custom input {
@@ -1021,6 +1174,15 @@ const colors = [
     height: 100%;
     opacity: 0;
     cursor: pointer;
+  }
+
+  .mp-menubar button:focus-visible,
+  .mp-tools button:focus-visible,
+  .mp-sizes button:focus-visible,
+  .mp-patterns :global(button:focus-visible),
+  .mp-colors button:focus-visible {
+    outline: 3px dashed var(--orange);
+    outline-offset: 3px;
   }
 
   .visually-hidden {
@@ -1037,14 +1199,20 @@ const colors = [
   }
 
   .mp-tips kbd {
-    font-family: inherit;
+    font-family: var(--font-display);
     font-size: 0.85em;
-    padding: 0 0.3em;
-    border: 1px solid currentColor;
-    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    border-radius: 6px 4px 7px 4px / 4px 6px 4px 7px;
+    background: var(--clay-texture) 0 0 / 240px, var(--paper);
+    background-blend-mode: soft-light, normal;
+    box-shadow: 0 2px 0 var(--cream-deep);
   }
 
   @media (max-width: 720px) {
+    .macpaint {
+      padding: 0.6rem;
+    }
+
     .mp-body {
       grid-template-columns: 1fr;
     }
@@ -1065,22 +1233,32 @@ const colors = [
 
     .mp-sizes button {
       width: 38px;
-      height: auto;
-      min-height: 38px;
+      height: 40px;
     }
 
-    .mp-sizes button::before {
-      width: 70%;
+    .mp-patterns {
+      grid-template-columns: repeat(7, 38px);
+      gap: 8px 5px;
     }
 
     .mp-colors {
-      grid-template-columns: repeat(8, 28px);
+      grid-template-columns: repeat(8, 30px);
     }
 
     .mp-colors button,
     .mp-custom {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mp-menubar button,
+    .mp-tools button,
+    .mp-sizes button,
+    .mp-patterns :global(button),
+    .mp-colors button {
+      transition: none;
     }
   }
 </style>
