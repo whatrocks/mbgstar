@@ -218,10 +218,35 @@ const BIT = 'url(#clay-bit)';
           <li>
             <button type="button" class="bab-player" data-player={i} data-name={m.name} aria-label={`${m.name}: empty-handed`}>
               <svg viewBox="0 0 200 320" aria-hidden="true" focusable="false" style={`--blink-delay: ${-i * 1.7}s`}>
+                <defs>
+                  {/* The arms drawn in front of the instruments fade in from the shoulder, so the shoulder itself comes from the blended lump. */}
+                  {[0, 1].map((h) => (
+                    <>
+                      <linearGradient id={`bab-fade-${i}-${h}`} class="bab-fade" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#000" />
+                        <stop offset="1" stop-color="#fff" />
+                      </linearGradient>
+                      <mask id={`bab-mask-${i}-${h}`} maskUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="440">
+                        <rect x="-60" y="-60" width="320" height="440" fill={`url(#bab-fade-${i}-${h})`} />
+                      </mask>
+                    </>
+                  ))}
+                </defs>
                 <ellipse cx="100" cy="306" rx="64" ry="9" fill="rgba(70, 40, 20, 0.2)" />
+                {/* Body, head and arms are one lump of clay, so the neck and shoulders blend. */}
+                <g filter={BODY} fill={m.clay}>
+                  <g class="bab-shape">
+                    <path d={bodyPath} />
+                    <path d={heads[m.head]} />
+                  </g>
+                  {[0, 1].map(() => (
+                    <g class="bab-limb">
+                      <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="21" stroke-linecap="round" />
+                      <ellipse class="bab-hand" rx="13.5" ry="12.5" />
+                    </g>
+                  ))}
+                </g>
                 <g class="bab-body">
-                  <path filter={BODY} d={bodyPath} fill={m.clay} />
-                  <path filter={BODY} d={heads[m.head]} fill={m.clay} />
                   {m.cap && (
                     <g filter={BIT}>
                       <path d="M53 70 C51 34 74 18 100 18 C126 18 149 34 147 70 Z" fill={m.cap[0]} />
@@ -251,13 +276,15 @@ const BIT = 'url(#clay-bit)';
                   <use href="" visibility="hidden" />
                 </g>
                 <g class="bab-arms">
-                  {[0, 1].map(() => (
+                  {[0, 1].map((h) => (
                     <g class="bab-arm">
-                      <g filter="url(#clay-arm)">
-                        <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="21" stroke-linecap="round" />
+                      <g mask={`url(#bab-mask-${i}-${h})`}>
+                        <g filter="url(#clay-arm)" fill={m.clay}>
+                          <path class="bab-arm-in" fill="none" stroke={m.clay} stroke-width="21" stroke-linecap="round" />
+                          <ellipse class="bab-hand" rx="13.5" ry="12.5" />
+                        </g>
                       </g>
                       <line class="bab-stick" stroke="#dba468" stroke-width="6.5" stroke-linecap="round" visibility="hidden" />
-                      <ellipse class="bab-hand" rx="13.5" ry="12.5" fill={m.clay} filter={BIT} />
                     </g>
                   ))}
                 </g>
@@ -802,8 +829,10 @@ const BIT = 'url(#clay-bit)';
   // ---------- Players ----------
 
   interface Arm {
+    /** The arm in front of the instruments and its copy blended into the body. */
     paths: SVGPathElement[];
-    hand: SVGEllipseElement;
+    hands: SVGEllipseElement[];
+    fade: SVGLinearGradientElement;
     stick: SVGLineElement;
   }
 
@@ -811,6 +840,7 @@ const BIT = 'url(#clay-bit)';
     name: string;
     button: HTMLButtonElement;
     body: SVGGElement;
+    shape: SVGGElement;
     instG: SVGGElement;
     use: SVGUseElement;
     strap: SVGPathElement;
@@ -830,15 +860,19 @@ const BIT = 'url(#clay-bit)';
   const trayBtns = [...root.querySelectorAll<HTMLButtonElement>('.bab-inst-btn')];
 
   const players: Player[] = [...root.querySelectorAll<HTMLButtonElement>('.bab-player')].map((button, i) => {
-    const arm = [...button.querySelectorAll<SVGGElement>('.bab-arm')].map((g) => ({
-      paths: [g.querySelector<SVGPathElement>('.bab-arm-in')!],
-      hand: g.querySelector<SVGEllipseElement>('.bab-hand')!,
+    const limbs = [...button.querySelectorAll<SVGGElement>('.bab-limb')];
+    const fades = [...button.querySelectorAll<SVGLinearGradientElement>('.bab-fade')];
+    const arm = [...button.querySelectorAll<SVGGElement>('.bab-arm')].map((g, h) => ({
+      paths: [g, limbs[h]].map((el) => el.querySelector<SVGPathElement>('.bab-arm-in')!),
+      hands: [g, limbs[h]].map((el) => el.querySelector<SVGEllipseElement>('.bab-hand')!),
+      fade: fades[h],
       stick: g.querySelector<SVGLineElement>('.bab-stick')!,
     })) as [Arm, Arm];
     return {
       name: button.dataset.name!,
       button,
       body: button.querySelector<SVGGElement>('.bab-body')!,
+      shape: button.querySelector<SVGGElement>('.bab-shape')!,
       instG: button.querySelector<SVGGElement>('.bab-inst')!,
       use: button.querySelector<SVGUseElement>('.bab-inst use')!,
       strap: button.querySelector<SVGPathElement>('.bab-strap')!,
@@ -889,8 +923,20 @@ const BIT = 'url(#clay-bit)';
     const ctrl = P((shoulder.x + hand.x) / 2 + n.x * bend, (shoulder.y + hand.y) / 2 + n.y * bend);
     const d = `M${shoulder.x.toFixed(1)} ${shoulder.y.toFixed(1)} Q${ctrl.x.toFixed(1)} ${ctrl.y.toFixed(1)} ${hand.x.toFixed(1)} ${hand.y.toFixed(1)}`;
     for (const p of arm.paths) p.setAttribute('d', d);
-    arm.hand.setAttribute('cx', hand.x.toFixed(1));
-    arm.hand.setAttribute('cy', hand.y.toFixed(1));
+    for (const h of arm.hands) {
+      h.setAttribute('cx', hand.x.toFixed(1));
+      h.setAttribute('cy', hand.y.toFixed(1));
+    }
+    // Fade the front arm in over the first half, from just off the shoulder.
+    const along = (t: number) => P(
+      (1 - t) ** 2 * shoulder.x + 2 * (1 - t) * t * ctrl.x + t * t * hand.x,
+      (1 - t) ** 2 * shoulder.y + 2 * (1 - t) * t * ctrl.y + t * t * hand.y,
+    );
+    const [a, b] = [along(0.15), along(0.5)];
+    arm.fade.setAttribute('x1', a.x.toFixed(1));
+    arm.fade.setAttribute('y1', a.y.toFixed(1));
+    arm.fade.setAttribute('x2', b.x.toFixed(1));
+    arm.fade.setAttribute('y2', b.y.toFixed(1));
   }
 
   /** Put a player in their pose at song position s (in sixteenth notes). */
@@ -959,6 +1005,7 @@ const BIT = 'url(#clay-bit)';
     }
 
     p.body.setAttribute('transform', move.transform);
+    p.shape.setAttribute('transform', move.transform);
     p.instG.setAttribute('transform', instTransform);
     setArm(p.arm[0], shoulders[0], hands[0], -1);
     setArm(p.arm[1], shoulders[1], hands[1], 1);
@@ -1338,13 +1385,19 @@ const BIT = 'url(#clay-bit)';
   let frame = 0;
   let shown = '';
 
-  function animate() {
+  /** Stop-motion is shot "on twos": pose the clay about 15 times a second, not every screen refresh. */
+  const FRAME_MS = 1000 / 15;
+  let lastPose = -Infinity;
+
+  function animate(time: number) {
+    frame = requestAnimationFrame(animate);
+    if (time - lastPose < FRAME_MS) return;
+    lastPose = time;
     const s = band.position();
     for (const p of players) pose(p, s, true);
     const step = Math.floor(wrap(s));
     const label = CHANGES.get(step);
     if (label && label !== shown) now.textContent = shown = label;
-    frame = requestAnimationFrame(animate);
   }
 
   function setPlaying(on: boolean) {
