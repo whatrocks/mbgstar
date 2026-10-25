@@ -36,13 +36,6 @@ const instruments = [
   { id: 'harmonica', label: 'Harmonica', icon: '78 98 44 28' },
 ];
 
-/** Darker shade of a clay color, for outlines and the clay's "side". */
-function deep(hex: string, amount = 0.32): string {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = (shift: number) => Math.round(((n >> shift) & 255) * (1 - amount));
-  return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
-}
-
 /** Head to feet in one piece: a big head, a chunky body and short, wide legs. */
 const blobPath =
   'M100 34 C127 34 146 52 146 82 C146 104 139 118 132 126 C142 134 148 148 149 168 L150 236 ' +
@@ -60,27 +53,6 @@ const tops: Partial<Record<Top, string>> = {
 // 18 white keys; black keys sit after these white keys in each octave.
 const whiteKeys = Array.from({ length: 18 }, (_, i) => -74 + i * (148 / 18));
 const blackKeys = whiteKeys.slice(0, -1).filter((_, i) => [0, 1, 3, 4, 5].includes(i % 7));
-
-/*
- * Clay: the shape's own alpha, blurred, becomes a soft rounded height map
- * with a little lumpy noise pressed in. Lit from the top left, so every part
- * reads as a squished lump with a highlight on its shoulder.
- */
-const clay = `
-  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-  <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="7" result="noise" />
-  <feComposite in="blur" in2="noise" operator="arithmetic" k2="1" k3="0.2" result="height" />
-  <feDiffuseLighting in="height" surfaceScale="4" diffuseConstant="1" lighting-color="#fff" result="diffuse">
-    <feDistantLight azimuth="225" elevation="55" />
-  </feDiffuseLighting>
-  <feComposite in="SourceGraphic" in2="diffuse" operator="arithmetic" k1="1.18" result="shaded" />
-  <feSpecularLighting in="height" surfaceScale="4" specularConstant="0.5" specularExponent="18" lighting-color="#fff" result="spec">
-    <feDistantLight azimuth="225" elevation="50" />
-  </feSpecularLighting>
-  <feComposite in="spec" in2="SourceAlpha" operator="in" result="specIn" />
-  <feComposite in="shaded" in2="specIn" operator="arithmetic" k2="1" k3="0.45" result="lit" />
-  <feComposite in="lit" in2="SourceAlpha" operator="in" />
-`;
 
 /*
  * Plasticine for the bandmates and their instruments: the shape swells into
@@ -112,7 +84,6 @@ function light(hex: string, amount = 0.35): string {
   return `#${((ch(16) << 16) | (ch(8) << 8) | ch(0)).toString(16).padStart(6, '0')}`;
 }
 
-const F = 'url(#clay)';
 const INST = 'url(#clay-inst)';
 /** Stockier than the outline is drawn: widen the body and anything sized to it. */
 const STOCKY = 'translate(100 0) scale(1.12 1) translate(-100 0)';
@@ -124,7 +95,6 @@ const BIT = 'url(#clay-bit)';
 <section class="bab" aria-label="Build-a-Bandmate">
   <svg class="bab-defs" width="0" height="0" aria-hidden="true" focusable="false">
     <defs>
-      <filter id="clay" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB" set:html={clay} />
       <!--
         Bounding boxes leave out stroke width, so the noodle arms (thick
         strokes) get a fixed region covering everywhere a hand can reach.
