@@ -211,6 +211,10 @@ main {
   color: var(--accent, var(--red));
 }
 
+.page-title--plain::after {
+  content: none;
+}
+
 .section-label {
   display: flex;
   align-items: center;

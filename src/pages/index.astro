@@ -1,27 +1,48 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { formatShowStart, upcomingShows } from '../data/shows';
+import { featuredVideos } from '../data/videos';
+
+const [firstVideo] = featuredVideos;
+const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0`;
 ---
 
 <BaseLayout>
   <section class="hero wrap">
     <div class="hero-copy">
-      <p class="section-label">Latest video</p>
-      <h1 class="page-title">After<br />Bedtime</h1>
+      <p class="section-label">Now showing</p>
+      <h1 class="page-title page-title--plain" id="video-title">{firstVideo.title}</h1>
       <p class="lede">A band of dads from Marin County and the East Bay, playing originals and covers once the kids are asleep.</p>
       <div class="hero-actions">
         <a class="button" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
         <a class="button" href="/shows" style="--accent: var(--green)">See shows</a>
       </div>
     </div>
-    <div class="hero-video frame">
-      <iframe
-        src="https://www.youtube-nocookie.com/embed/PkiwIzlOOww"
-        title="Money Back Guarantee* on YouTube"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
-      ></iframe>
+    <div class="hero-media">
+      <div class="hero-video frame">
+        <iframe
+          id="video-player"
+          src={embedUrl(firstVideo.youtubeId)}
+          title={`${firstVideo.title} by Money Back Guarantee*`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <div class="video-picker" role="group" aria-label="Choose a video">
+        {featuredVideos.map((video, i) => (
+          <button
+            type="button"
+            class="video-pick"
+            data-id={video.youtubeId}
+            data-title={video.title}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+          >
+            <span class="video-pick-num">{String(i + 1).padStart(2, '0')}</span>
+            {video.title}
+          </button>
+        ))}
+      </div>
     </div>
   </section>
 
@@ -62,6 +83,12 @@ import { formatShowStart, upcomingShows } from '../data/shows';
     gap: 0.75rem;
   }
 
+  /* Sized so every title fits in two lines and the layout holds still. */
+  .hero .page-title {
+    min-height: 1.76em;
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+  }
+
   .hero-video {
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   }
@@ -70,6 +97,66 @@ import { formatShowStart, upcomingShows } from '../data/shows';
     aspect-ratio: 16 / 9;
     height: auto;
     border: 0;
+  }
+
+  .video-picker {
+    display: flex;
+    margin-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  /* A tab per video; the playing one gets a colored bar on top. */
+  .video-pick {
+    --accent: var(--red);
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.9rem 0 0.25rem;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .video-pick:nth-child(2) { --accent: var(--green); }
+  .video-pick:nth-child(3) { --accent: var(--yellow); }
+  .video-pick:nth-child(4) { --accent: var(--magenta); }
+
+  .video-pick::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 1rem;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+
+  .video-pick:hover,
+  .video-pick[aria-pressed="true"] {
+    color: var(--ink);
+  }
+
+  .video-pick[aria-pressed="true"]::before {
+    transform: scaleX(1);
+  }
+
+  .video-pick-num {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent);
   }
 
   .upcoming {
@@ -88,6 +175,7 @@ import { formatShowStart, upcomingShows } from '../data/shows';
   }
 
   :global(body.music-mode) .hero-copy,
+  :global(body.music-mode) .video-picker,
   :global(body.music-mode) .upcoming {
     display: none;
   }
@@ -96,5 +184,76 @@ import { formatShowStart, upcomingShows } from '../data/shows';
     .hero {
       grid-template-columns: 1fr;
     }
+
+    .hero .page-title {
+      min-height: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video-pick,
+    .video-pick::before {
+      transition: none;
+    }
   }
 </style>
+
+<script>
+  /*
+   * Plays the featured videos in turn: when one ends the next starts, and
+   * the last loops back to the first. The tabs jump straight to a video.
+   */
+  interface YTPlayer {
+    loadVideoById(id: string): void;
+  }
+
+  interface YTNamespace {
+    Player: new (
+      el: HTMLIFrameElement,
+      opts: { events: { onStateChange: (e: { data: number }) => void } }
+    ) => YTPlayer;
+    PlayerState: { ENDED: number };
+  }
+
+  const iframe = document.getElementById('video-player') as HTMLIFrameElement | null;
+  const title = document.getElementById('video-title');
+  const picks = [...document.querySelectorAll<HTMLButtonElement>('.video-pick')];
+
+  if (iframe && title && picks.length > 1) {
+    let current = 0;
+    let player: YTPlayer | null = null;
+
+    const play = (index: number) => {
+      current = index;
+      const pick = picks[index];
+      const id = pick.dataset.id!;
+      title.textContent = pick.dataset.title!;
+      iframe.title = `${pick.dataset.title} by Money Back Guarantee*`;
+      picks.forEach((p, i) => p.setAttribute('aria-pressed', String(i === index)));
+
+      if (player) {
+        player.loadVideoById(id);
+      } else {
+        iframe.src = `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&autoplay=1`;
+      }
+    };
+
+    picks.forEach((pick, i) => pick.addEventListener('click', () => play(i)));
+
+    const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void };
+    w.onYouTubeIframeAPIReady = () => {
+      const YT = w.YT!;
+      player = new YT.Player(iframe, {
+        events: {
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.ENDED) play((current + 1) % picks.length);
+          }
+        }
+      });
+    };
+
+    const api = document.createElement('script');
+    api.src = 'https://www.youtube.com/iframe_api';
+    document.head.append(api);
+  }
+</script>
