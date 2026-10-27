@@ -14,8 +14,8 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
       <h1 class="page-title page-title--plain" id="video-title">{firstVideo.title}</h1>
       <p class="lede">A band of dads from Marin County and the East Bay, playing originals and covers once the kids are asleep.</p>
       <div class="hero-actions">
-        <a class="button" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
-        <a class="button" href="/shows" style="--accent: var(--green)">See shows</a>
+        <a class="button button--primary" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
+        <a class="button" href="/shows">See shows</a>
       </div>
     </div>
     <div class="hero-media">
@@ -47,7 +47,7 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
   </section>
 
   {upcomingShows.length > 0 && (
-    <section class="upcoming wrap" style="--accent: var(--yellow)">
+    <section class="upcoming wrap" style="--accent: var(--amber)">
       <h2 class="section-label">Upcoming shows</h2>
       <ul class="show-list">
         {upcomingShows.map((show) => (
@@ -86,11 +86,13 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
   /* Sized so every title fits in two lines and the layout holds still. */
   .hero .page-title {
     min-height: 1.76em;
-    font-size: clamp(3.5rem, 8vw, 6.5rem);
+    font-size: clamp(3rem, 7vw, 5.5rem);
   }
 
+  /* Lit from the water: a sea-green glow and a hard orange edge. */
   .hero-video {
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 0 1px rgba(92, 191, 179, 0.25), 0 30px 80px rgba(47, 143, 138, 0.25), 0 30px 60px rgba(0, 0, 0, 0.6);
+    border-bottom: 3px solid var(--bridge);
   }
 
   .hero-video iframe {
@@ -107,7 +109,7 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
 
   /* A tab per video; the playing one gets a colored bar on top. */
   .video-pick {
-    --accent: var(--red);
+    --accent: var(--bridge-hot);
     position: relative;
     flex: 1;
     display: flex;
@@ -118,16 +120,16 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     border: 0;
     color: var(--muted);
     font-family: var(--font-display);
-    font-size: 1.35rem;
+    font-size: 1.1rem;
     text-transform: uppercase;
     text-align: left;
     cursor: pointer;
     transition: color 150ms ease;
   }
 
-  .video-pick:nth-child(2) { --accent: var(--green); }
-  .video-pick:nth-child(3) { --accent: var(--yellow); }
-  .video-pick:nth-child(4) { --accent: var(--magenta); }
+  .video-pick:nth-child(2) { --accent: var(--amber); }
+  .video-pick:nth-child(3) { --accent: var(--sea); }
+  .video-pick:nth-child(4) { --accent: var(--foam); }
 
   .video-pick::before {
     content: "";

@@ -1,25 +1,25 @@
 /*
- * NeXT theme. A black cube with four bright letters on it, after Paul
- * Rand's NeXT logo: everything sits on near-black, and red, green, yellow
- * and magenta are used only as small accents, in that order.
+ * Deep water theme, after the Scam Likely EP cover: a guitar thrown into
+ * dark green-blue water, with white spray and sun glints on the surface.
+ * Golden Gate International Orange is the one loud color; the sunburst
+ * amber of the guitar body and a lighter sea green back it up.
  */
 :root {
-  --bg: #0b0b0b;
-  --surface: #151515;
-  --line: #2b2b2b;
-  --ink: #f3f0ea;
-  --muted: #9b968e;
-  --paper: #f3f0ea;
+  --bg: #061b1e;
+  --deep: #03100f;
+  --surface: #0c2a2e;
+  --line: #1d4448;
+  --ink: #eef6f3;
+  --muted: #8db0ac;
+  --paper: #eef6f3;
 
-  --red: #f2382f;
-  --green: #3cc24a;
-  --yellow: #f7d224;
-  --magenta: #ea3a95;
+  --bridge: #c0362c;
+  --bridge-hot: #e04a33;
+  --amber: #e0913f;
+  --sea: #5cbfb3;
+  --foam: #d6efeb;
 
-  /* The four logo colors as one rule. */
-  --stripe: linear-gradient(90deg, var(--red) 0 25%, var(--green) 25% 50%, var(--yellow) 50% 75%, var(--magenta) 75%);
-
-  --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
+  --font-display: "Archivo Black", "Arial Black", "Helvetica Neue", sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Helvetica Neue", sans-serif;
 
   --gutter: clamp(1rem, 4vw, 2.5rem);
@@ -36,17 +36,38 @@ body {
   min-height: 100%;
 }
 
+/*
+ * The water: a lit patch near the top fading to near-black at the edges,
+ * like the cover photo, with a faint ripple texture laid over it.
+ */
 body {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 90% 60% at 60% 0%, rgba(47, 120, 116, 0.45), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 10% 100%, rgba(30, 90, 88, 0.3), transparent 70%),
+    linear-gradient(180deg, var(--bg), var(--deep));
+  background-attachment: fixed;
+  background-color: var(--bg);
   font-family: var(--font-body);
   font-size: 1.0625rem;
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.035' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -0.45'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
 }
 
 a {
@@ -55,7 +76,7 @@ a {
 
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid var(--yellow);
+  outline: 2px solid var(--amber);
   outline-offset: 3px;
 }
 
@@ -66,7 +87,7 @@ h3 {
   font-weight: 400;
   line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 .wrap {
@@ -81,16 +102,10 @@ h3 {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(11, 11, 11, 0.88);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.site-header::after {
-  content: "";
-  display: block;
-  height: 3px;
-  background: var(--stripe);
+  background: rgba(6, 27, 30, 0.82);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 3px solid var(--bridge);
 }
 
 .site-header .wrap {
@@ -110,21 +125,25 @@ h3 {
 
 .brand-name {
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  letter-spacing: 0.04em;
+  font-size: 1.2rem;
+  letter-spacing: 0;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
+.brand-name span {
+  color: var(--bridge-hot);
+}
+
 /*
- * The MBG* cube. Its black faces would sink into the header, so a faint
+ * The MBG* cube. Its black faces would sink into the water, so a faint
  * rim light picks out the edges.
  */
 .cube {
   display: block;
   width: 3rem;
   height: 3rem;
-  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 0 1px rgba(214, 239, 235, 0.45)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
   transition: transform 200ms ease;
 }
 
@@ -138,7 +157,6 @@ h3 {
 }
 
 .site-nav a {
-  --accent: var(--red);
   position: relative;
   padding: 0.25rem 0;
   font-size: 0.8rem;
@@ -150,10 +168,6 @@ h3 {
   transition: color 150ms ease;
 }
 
-.site-nav a:nth-child(2) { --accent: var(--green); }
-.site-nav a:nth-child(3) { --accent: var(--yellow); }
-.site-nav a:nth-child(4) { --accent: var(--magenta); }
-
 .site-nav a::after {
   content: "";
   position: absolute;
@@ -161,7 +175,7 @@ h3 {
   right: 0;
   bottom: -2px;
   height: 2px;
-  background: var(--accent);
+  background: var(--bridge-hot);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 180ms ease;
@@ -185,22 +199,24 @@ main {
   padding: clamp(2.5rem, 7vw, 5rem) 0 4rem;
 }
 
-/* Page title: huge condensed caps, with the asterisk in the next color. */
+/* Page title: heavy white caps like the cover, asterisk in bridge orange. */
 .page-title {
   margin: 0 0 clamp(2rem, 5vw, 3.5rem);
-  font-size: clamp(3.5rem, 13vw, 8.5rem);
-  line-height: 0.88;
+  font-size: clamp(3rem, 11vw, 7rem);
+  line-height: 0.92;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
 }
 
 .page-title::after {
   content: "*";
-  color: var(--accent, var(--red));
+  color: var(--accent, var(--bridge-hot));
 }
 
 .page-title--plain::after {
   content: none;
 }
 
+/* Small spaced caps, like "SCAM LIKELY EP" on the cover. */
 .section-label {
   display: flex;
   align-items: center;
@@ -209,28 +225,30 @@ main {
   font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--foam);
 }
 
 .section-label::before {
   content: "";
   width: 1.5rem;
   height: 3px;
-  background: var(--accent, var(--red));
+  background: var(--accent, var(--bridge-hot));
 }
 
 .lede {
   max-width: 38rem;
   margin: 0 0 1.5rem;
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
   line-height: 1.5;
+  color: var(--foam);
 }
 
 .frame {
-  background: #000;
+  background: var(--deep);
   border: 1px solid var(--line);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
 }
 
 .frame > * {
@@ -246,18 +264,16 @@ main {
   display: block;
   width: 100%;
   height: auto;
-  filter: grayscale(0.15) contrast(1.05);
 }
 
-/* Outline button that fills with its accent on hover. */
+/* Outline button that fills with bridge orange on hover. */
 .button {
-  --accent: var(--yellow);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.1rem;
-  border: 1px solid var(--ink);
+  padding: 0.7rem 1.15rem;
+  border: 1px solid var(--foam);
   background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
@@ -272,9 +288,21 @@ main {
 }
 
 .button:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #000;
+  background: var(--bridge);
+  border-color: var(--bridge);
+  color: #fff;
+}
+
+/* Solid orange, for the one thing a page most wants you to do. */
+.button--primary {
+  background: var(--bridge);
+  border-color: var(--bridge);
+  color: #fff;
+}
+
+.button--primary:hover {
+  background: var(--bridge-hot);
+  border-color: var(--bridge-hot);
 }
 
 .button svg {
@@ -305,7 +333,7 @@ main {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent, var(--yellow));
+  color: var(--accent, var(--amber));
 }
 
 .show-venue {
@@ -317,8 +345,8 @@ main {
 
 .show-name {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
-  line-height: 1.05;
+  font-size: clamp(1.35rem, 3.2vw, 1.9rem);
+  line-height: 1.1;
   text-transform: uppercase;
 }
 
@@ -337,21 +365,22 @@ main {
 }
 
 .show-list--past .show-name {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: var(--muted);
 }
 
 /* ---------- Footer ---------- */
 
 .site-footer {
-  background: #000;
+  background: rgba(3, 16, 15, 0.85);
 }
 
-.site-footer::before {
-  content: "";
+/* A span of the Golden Gate: main cable, suspenders and deck. */
+.bridge-span {
   display: block;
-  height: 3px;
-  background: var(--stripe);
+  width: 100%;
+  height: clamp(48px, 7vw, 90px);
+  color: var(--bridge);
 }
 
 .site-footer .wrap {
@@ -364,12 +393,12 @@ main {
 
 .footer-title {
   margin: 0 0 1.25rem;
-  font-size: clamp(2.25rem, 6vw, 3.5rem);
-  line-height: 0.95;
+  font-size: clamp(2rem, 5.5vw, 3.1rem);
+  line-height: 0.98;
 }
 
 .footer-title span {
-  color: var(--magenta);
+  color: var(--bridge-hot);
 }
 
 .social-links {
@@ -377,10 +406,6 @@ main {
   flex-wrap: wrap;
   gap: 0.75rem;
 }
-
-.social-links a:nth-child(1) { --accent: var(--red); }
-.social-links a:nth-child(2) { --accent: var(--green); }
-.social-links a:nth-child(3) { --accent: var(--yellow); }
 
 .mailing-list {
   overflow: hidden;
@@ -441,7 +466,7 @@ body.music-mode main {
   }
 
   .brand-name {
-    font-size: 1.15rem;
+    font-size: 1rem;
   }
 
   .cube {

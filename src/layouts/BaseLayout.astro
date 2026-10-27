@@ -17,6 +17,33 @@ const navLinks = [
   { href: '/music', label: 'Music' },
   { href: '/about', label: 'About' }
 ];
+
+/*
+ * A span of the Golden Gate for the top of the footer: two towers, the
+ * main cable sagging between them and the side spans running off the
+ * edges, with suspenders hung every 24 units down to the deck.
+ */
+const W = 1200;
+const DECK = 78;
+const TOP = 6;
+const towers = [170, 1030];
+const sag = 64;
+const cableY = (x: number) => {
+  const [a, b] = towers;
+  const side = DECK - 22 - TOP;
+  if (x < a) return TOP + side * ((a - x) / a) ** 1.4;
+  if (x > b) return TOP + side * ((x - b) / (W - b)) ** 1.4;
+  const t = (x - (a + b) / 2) / ((b - a) / 2);
+  return TOP + (sag - TOP) * (1 - t * t);
+};
+const cable = Array.from({ length: W / 10 + 1 }, (_, i) => {
+  const x = i * 10;
+  return `${i ? 'L' : 'M'}${x} ${cableY(x).toFixed(1)}`;
+}).join(' ');
+const suspenders = Array.from({ length: W / 24 - 1 }, (_, i) => (i + 1) * 24)
+  .filter((x) => towers.every((t) => Math.abs(x - t) > 8))
+  .map((x) => `M${x} ${cableY(x).toFixed(1)} V${DECK}`)
+  .join(' ');
 ---
 
 <!doctype html>
@@ -28,12 +55,12 @@ const navLinks = [
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="theme-color" content="#061b1e" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap"
     />
   </head>
   <body>
@@ -41,7 +68,7 @@ const navLinks = [
       <div class="wrap">
         <a href="/" class="brand" aria-label="Money Back Guarantee* home">
           <img class="cube" src="/mbg-cube.webp" alt="" width="96" height="96" />
-          <span class="brand-name">Money Back Guarantee*</span>
+          <span class="brand-name">Money Back Guarantee<span>*</span></span>
         </a>
         <nav class="site-nav" aria-label="Main">
           {navLinks.map((link) => (
@@ -54,6 +81,16 @@ const navLinks = [
       <slot />
     </main>
     <footer class="site-footer">
+      <svg class="bridge-span" viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" aria-hidden="true">
+        <g fill="none" stroke="currentColor" vector-effect="non-scaling-stroke">
+          <path d={suspenders} stroke-width="1" opacity="0.7" vector-effect="non-scaling-stroke" />
+          <path d={cable} stroke-width="2.5" vector-effect="non-scaling-stroke" />
+          <path d={`M0 ${DECK} H${W}`} stroke-width="4" vector-effect="non-scaling-stroke" />
+          {towers.map((x) => (
+            <path d={`M${x - 7} 0 V90 M${x + 7} 0 V90 M${x - 7} 14 H${x + 7} M${x - 7} 36 H${x + 7} M${x - 7} 58 H${x + 7}`} stroke-width="3" vector-effect="non-scaling-stroke" />
+          ))}
+        </g>
+      </svg>
       <div class="wrap">
         <div>
           <h2 class="footer-title">Stay in<br />the loop<span>*</span></h2>
