@@ -1,41 +1,28 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import clayMac from '../assets/clay-mac.png';
 import { formatShowStart, upcomingShows } from '../data/shows';
 ---
 
 <BaseLayout>
   <section class="hero wrap">
     <div class="hero-copy">
-      <p class="section-label">Now playing</p>
-      <h1 class="page-title">Sunny<br />Day</h1>
-      <p class="lede">A band of dads from Marin County and the East Bay, rocking after bedtime. Tap the Mac to hear it.</p>
+      <p class="section-label">Latest video</p>
+      <h1 class="page-title">After<br />Bedtime</h1>
+      <p class="lede">A band of dads from Marin County and the East Bay, playing originals and covers once the kids are asleep.</p>
       <div class="hero-actions">
         <a class="button" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
         <a class="button" href="/shows" style="--accent: var(--green)">See shows</a>
       </div>
     </div>
-    <figure class="hero-stage">
-      <button
-        type="button"
-        id="record-toggle"
-        class="record-toggle"
-        aria-label="Play Sunny Day"
-        aria-pressed="false"
-      >
-        <Image
-          src={clayMac}
-          alt="A smiling vintage Macintosh computer sculpted from clay, with asterisk eyes on a teal screen."
-          widths={[320, 480, 640, 768]}
-          sizes="(max-width: 760px) 80vw, 480px"
-          format="webp"
-          quality={80}
-          loading="eager"
-        />
-      </button>
-      <audio id="record-audio" src="/sunny-day.mp3" preload="none"></audio>
-    </figure>
+    <div class="hero-video frame">
+      <iframe
+        src="https://www.youtube-nocookie.com/embed/PkiwIzlOOww"
+        title="Money Back Guarantee* on YouTube"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </div>
   </section>
 
   {upcomingShows.length > 0 && (
@@ -60,9 +47,9 @@ import { formatShowStart, upcomingShows } from '../data/shows';
 <style>
   .hero {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 5fr 7fr;
     align-items: center;
-    gap: 2rem;
+    gap: clamp(2rem, 4vw, 3.5rem);
   }
 
   .hero .page-title {
@@ -75,17 +62,14 @@ import { formatShowStart, upcomingShows } from '../data/shows';
     gap: 0.75rem;
   }
 
-  .hero-stage {
-    position: relative;
-    margin: 0;
+  .hero-video {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   }
 
-  /* A spotlight on the black stage. */
-  .hero-stage::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.1), transparent 75%);
+  .hero-video iframe {
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border: 0;
   }
 
   .upcoming {
@@ -96,107 +80,21 @@ import { formatShowStart, upcomingShows } from '../data/shows';
     margin-top: 1.75rem;
   }
 
-  .record-toggle {
-    position: relative;
-    display: block;
-    width: min(480px, 100%);
-    margin: 0 auto;
-    padding: 0;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    filter: drop-shadow(0 24px 22px rgba(0, 0, 0, 0.7));
-  }
-
-  .record-toggle:focus-visible {
-    outline: 2px solid var(--yellow);
-    outline-offset: 6px;
-  }
-
-  .record-toggle img {
-    display: block;
-    width: 100%;
-    height: auto;
-    transform-origin: 50% 95%;
-    transition: transform 120ms ease;
-  }
-
-  .record-toggle:hover img {
-    transform: scale(1.02, 0.98);
-  }
-
-  /* Stop-motion bop: held poses, no tweening between them. */
-  .record-toggle.is-playing img,
-  :global(body.music-mode) .record-toggle img {
-    animation: clay-bop 1.2s steps(1, end) infinite;
-  }
-
-  @keyframes clay-bop {
-    0% { transform: rotate(0deg) scale(1, 1); }
-    12.5% { transform: rotate(-3deg) scale(1.03, 0.97) translateY(4px); }
-    25% { transform: rotate(-4deg) scale(0.98, 1.03) translateY(-10px); }
-    37.5% { transform: rotate(-1deg) scale(1.04, 0.96) translateY(3px); }
-    50% { transform: rotate(0deg) scale(1, 1); }
-    62.5% { transform: rotate(3deg) scale(1.03, 0.97) translateY(4px); }
-    75% { transform: rotate(4deg) scale(0.98, 1.03) translateY(-10px); }
-    87.5% { transform: rotate(1deg) scale(1.04, 0.96) translateY(3px); }
-  }
-
+  /* Music mode: just the video. */
   :global(body.music-mode) .hero {
     display: block;
-    width: min(410px, 45vw);
+    width: min(960px, 90vw);
     padding: 0;
   }
 
   :global(body.music-mode) .hero-copy,
-  :global(body.music-mode) .hero-stage::before,
   :global(body.music-mode) .upcoming {
     display: none;
   }
 
-  @media (max-width: 760px) {
+  @media (max-width: 860px) {
     .hero {
       grid-template-columns: 1fr;
     }
-
-    .hero-stage {
-      order: -1;
-      width: min(360px, 85%);
-      margin: 0 auto;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .record-toggle img {
-      animation-duration: 4s;
-    }
   }
 </style>
-
-<script>
-  const button = document.getElementById('record-toggle') as HTMLButtonElement | null;
-  const audio = document.getElementById('record-audio') as HTMLAudioElement | null;
-
-  if (button && audio) {
-    const setPlaying = (playing: boolean) => {
-      button.classList.toggle('is-playing', playing);
-      button.setAttribute('aria-pressed', String(playing));
-      button.setAttribute('aria-label', playing ? 'Pause Sunny Day' : 'Play Sunny Day');
-    };
-
-    button.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play().then(() => setPlaying(true)).catch(() => {});
-      } else {
-        audio.pause();
-        setPlaying(false);
-      }
-    });
-
-    audio.addEventListener('ended', () => {
-      audio.currentTime = 0;
-      setPlaying(false);
-    });
-  }
-</script>
