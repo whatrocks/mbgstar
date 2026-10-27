@@ -4,15 +4,75 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout title="About — Money Back Guarantee*">
   <div class="wrap">
-    <h1 class="page-title" style="--accent: var(--sea)">About</h1>
-    <figure class="photo frame">
-      <img src="/band.jpg" alt="Money Back Guarantee*" />
-    </figure>
-    <p class="lede">
-      Money Back Guarantee* is a band of dads hailing from Marin County and the
-      East Bay playing originals and covers, after bedtime. They're always ready to rock, as
-      long as the dishes are done, the dog's walked, and the
-      laundry's running.
-    </p>
+    <h1 class="page-title">About</h1>
+    <div class="about">
+      <figure class="polaroid">
+        <img src="/band.jpg" alt="Money Back Guarantee*" />
+        <figcaption>the dads, post-bedtime</figcaption>
+      </figure>
+      <div>
+        <p class="lede">
+          Money Back Guarantee* is a band of dads hailing from Marin County and the
+          East Bay playing originals and covers, after bedtime.
+        </p>
+        <p class="pull">
+          Always ready to rock, as long as the dishes are done, the dog's walked,
+          and the laundry's running.
+        </p>
+      </div>
+    </div>
   </div>
 </BaseLayout>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    align-items: center;
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+
+  /* An instant photo, tipped a little on the table. */
+  .polaroid {
+    margin: 0;
+    padding: 1rem 1rem 0;
+    background: var(--paper);
+    transform: rotate(-2deg);
+    box-shadow: 0 1px 0 var(--line), 0 30px 50px -24px rgba(92, 47, 23, 0.5);
+  }
+
+  .polaroid img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .polaroid figcaption {
+    padding: 0.9rem 0 1.1rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-style: italic;
+    font-weight: 600;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    text-align: center;
+  }
+
+  .pull {
+    margin: 0;
+    padding: 1.5rem 1.75rem;
+    border-radius: 20px;
+    background: var(--aqua);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.6vw, 1.85rem);
+    font-weight: 700;
+    font-style: italic;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    line-height: 1.2;
+  }
+
+  @media (max-width: 760px) {
+    .about {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,34 +1,70 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { formatShowStart, upcomingShows } from '../data/shows';
+import ShowTicket from '../components/ShowTicket.astro';
+import Star from '../components/Star.astro';
+import { upcomingShows } from '../data/shows';
 import { featuredVideos } from '../data/videos';
 
 const [firstVideo] = featuredVideos;
 const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0`;
+
+/* Sun glints on the water, as [left %, top %, size px, delay s]. */
+const glints = [
+  [72, 14, 26, 0],
+  [86, 32, 14, 1.2],
+  [64, 46, 18, 2.1],
+  [92, 62, 22, 0.6],
+  [78, 78, 12, 1.7]
+];
+
+const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walked', 'Laundry running', 'Ready to rock'];
 ---
 
 <BaseLayout>
   <section class="hero wrap">
-    <div class="hero-copy">
-      <p class="section-label">Now showing</p>
-      <h1 class="page-title page-title--plain" id="video-title">{firstVideo.title}</h1>
-      <p class="lede">A band of dads from Marin County and the East Bay, playing originals and covers once the kids are asleep.</p>
+    <div class="hero-panel">
+      {glints.map(([left, top, size, delay]) => (
+        <svg
+          class="glint"
+          viewBox="0 0 24 24"
+          width={size}
+          height={size}
+          style={`left: ${left}%; top: ${top}%; animation-delay: ${delay}s`}
+          aria-hidden="true"
+        >
+          <path d="M12 0C13 9 15 11 24 12 15 13 13 15 12 24 11 15 9 13 0 12 9 11 11 9 12 0Z" fill="currentColor" />
+        </svg>
+      ))}
+      <Star class="hero-star star--spin" size={260} />
+      <p class="tag">After bedtime · Marin &amp; the East Bay</p>
+      <h1 class="hero-title">Money Back Guarantee<span>*</span></h1>
+      <p class="lede">A band of dads playing originals and covers once the kids are asleep.</p>
       <div class="hero-actions">
-        <a class="button button--primary" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
+        <a class="button button--sun" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
         <a class="button" href="/shows">See shows</a>
       </div>
     </div>
-    <div class="hero-media">
-      <div class="hero-video frame">
-        <iframe
-          id="video-player"
-          src={embedUrl(firstVideo.youtubeId)}
-          title={`${firstVideo.title} by Money Back Guarantee*`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen
-        ></iframe>
-      </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      {[0, 1].map(() => (
+        <span>
+          {ticker.map((item) => (
+            <>
+              {item}
+              <Star size={22} />
+            </>
+          ))}
+        </span>
+      ))}
+    </div>
+  </div>
+
+  <section class="now-playing wrap">
+    <div class="now-playing-copy">
+      <p class="tag">Now playing</p>
+      <h2 class="section-title" id="video-title">{firstVideo.title}</h2>
       <div class="video-picker" role="group" aria-label="Choose a video">
         {featuredVideos.map((video, i) => (
           <button
@@ -38,43 +74,106 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
             data-title={video.title}
             aria-pressed={i === 0 ? 'true' : 'false'}
           >
-            <span class="video-pick-num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="video-pick-num">{i + 1}</span>
             {video.title}
           </button>
         ))}
       </div>
     </div>
+    <div class="hero-video frame">
+      <iframe
+        id="video-player"
+        src={embedUrl(firstVideo.youtubeId)}
+        title={`${firstVideo.title} by Money Back Guarantee*`}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </div>
   </section>
 
   {upcomingShows.length > 0 && (
-    <section class="upcoming wrap" style="--accent: var(--amber)">
-      <h2 class="section-label">Upcoming shows</h2>
-      <ul class="show-list">
-        {upcomingShows.map((show) => (
-          <li>
-            <span class="show-date">{formatShowStart(show.start)}</span>
-            <span class="show-venue">
-              <span class="show-name">{show.venue}</span>
-              {show.detail && <span class="show-detail">{show.detail}</span>}
-            </span>
-          </li>
-        ))}
+    <section class="upcoming wrap">
+      <div class="upcoming-head">
+        <h2 class="section-title">Catch us <em>live</em></h2>
+        <a class="button" href="/shows">All shows →</a>
+      </div>
+      <ul class="tickets">
+        {upcomingShows.map((show) => <ShowTicket show={show} />)}
       </ul>
-      <a class="button upcoming-more" href="/shows">All shows</a>
     </section>
   )}
 </BaseLayout>
 
 <style>
-  .hero {
-    display: grid;
-    grid-template-columns: 5fr 7fr;
-    align-items: center;
-    gap: clamp(2rem, 4vw, 3.5rem);
+  /* ---------- Hero: the water ---------- */
+
+  .hero-panel {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(2.5rem, 7vw, 5.5rem) clamp(1.5rem, 6vw, 5rem);
+    border-radius: var(--radius);
+    color: var(--cream);
+    background:
+      radial-gradient(ellipse 60% 70% at 85% 30%, rgba(143, 216, 205, 0.4), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgba(7, 40, 42, 0.6), transparent 70%),
+      var(--sea);
   }
 
-  .hero .page-title {
-    margin-bottom: 1.5rem;
+  /* Ripples on the surface. */
+  .hero-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.04' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.6 -0.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .hero-panel > :not(.glint, .hero-star) {
+    position: relative;
+  }
+
+  .glint {
+    position: absolute;
+    color: #fff;
+    animation: twinkle 3.2s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.6) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(45deg); }
+  }
+
+  .hero-panel :global(.hero-star) {
+    position: absolute;
+    right: -70px;
+    bottom: -70px;
+    width: clamp(160px, 26vw, 300px);
+    height: auto;
+    color: var(--sun);
+  }
+
+  .hero .tag {
+    color: var(--maple);
+  }
+
+  .hero-title {
+    max-width: 11ch;
+    margin: 0 0 1.5rem;
+    font-size: clamp(3.4rem, 10vw, 8.5rem);
+    font-style: italic;
+    line-height: 0.88;
+    color: var(--paper);
+  }
+
+  .hero-title span {
+    color: var(--sun);
+  }
+
+  .hero .lede {
+    color: var(--spray);
   }
 
   .hero-actions {
@@ -83,16 +182,61 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     gap: 0.75rem;
   }
 
-  /* Sized so every title fits in two lines and the layout holds still. */
-  .hero .page-title {
-    min-height: 1.76em;
-    font-size: clamp(3rem, 7vw, 5.5rem);
+  /* ---------- Ticker ---------- */
+
+  .ticker {
+    overflow: hidden;
+    margin: clamp(2.5rem, 6vw, 4rem) -1rem;
+    padding: 0.85rem 0;
+    background: var(--sun);
+    transform: rotate(-1.5deg);
   }
 
-  /* Lit from the water: a sea-green glow and a hard orange edge. */
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: tick 40s linear infinite;
+  }
+
+  .ticker-track > span {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding-right: 1.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 800;
+    font-style: italic;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
+    white-space: nowrap;
+  }
+
+  .ticker :global(.star) {
+    color: var(--cream);
+  }
+
+  @keyframes tick {
+    to { transform: translateX(-50%); }
+  }
+
+  /* ---------- Now playing ---------- */
+
+  .now-playing {
+    display: grid;
+    grid-template-columns: 4fr 7fr;
+    align-items: center;
+    gap: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  /* Two lines' room so the layout holds still between titles. */
+  .now-playing .section-title {
+    min-height: 1.9em;
+    font-size: clamp(2.8rem, 6vw, 4.75rem);
+    font-style: italic;
+  }
+
   .hero-video {
-    box-shadow: 0 0 0 1px rgba(92, 191, 179, 0.25), 0 30px 80px rgba(47, 143, 138, 0.25), 0 30px 60px rgba(0, 0, 0, 0.6);
-    border-bottom: 3px solid var(--bridge);
+    box-shadow: 14px 14px 0 var(--maple), 0 24px 50px -20px rgba(15, 58, 60, 0.45);
   }
 
   .hero-video iframe {
@@ -103,98 +247,104 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
 
   .video-picker {
     display: flex;
-    margin-top: 1rem;
-    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
-  /* A tab per video; the playing one gets a colored bar on top. */
   .video-pick {
-    --accent: var(--bridge-hot);
-    position: relative;
-    flex: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 0.75rem;
-    padding: 0.9rem 0 0.25rem;
-    background: none;
-    border: 0;
-    color: var(--muted);
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    text-align: left;
-    cursor: pointer;
-    transition: color 150ms ease;
-  }
-
-  .video-pick:nth-child(2) { --accent: var(--amber); }
-  .video-pick:nth-child(3) { --accent: var(--sea); }
-  .video-pick:nth-child(4) { --accent: var(--foam); }
-
-  .video-pick::before {
-    content: "";
-    position: absolute;
-    top: -2px;
-    left: 0;
-    right: 1rem;
-    height: 3px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 200ms ease;
-  }
-
-  .video-pick:hover,
-  .video-pick[aria-pressed="true"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 1.1rem 0.45rem 0.45rem;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: transparent;
     color: var(--ink);
-  }
-
-  .video-pick[aria-pressed="true"]::before {
-    transform: scaleX(1);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
   }
 
   .video-pick-num {
-    font-family: var(--font-body);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    color: var(--accent);
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: var(--maple);
+    color: var(--ink);
+    font-size: 0.8rem;
   }
+
+  .video-pick:hover {
+    background: var(--spray);
+  }
+
+  .video-pick[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  .video-pick[aria-pressed="true"] .video-pick-num {
+    background: var(--sun);
+  }
+
+  /* ---------- Upcoming ---------- */
 
   .upcoming {
-    margin-top: clamp(3rem, 8vw, 6rem);
+    margin-top: clamp(4rem, 9vw, 7rem);
   }
 
-  .upcoming-more {
-    margin-top: 1.75rem;
+  .upcoming-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   /* Music mode: just the video. */
-  :global(body.music-mode) .hero {
+  :global(body.music-mode) .now-playing {
     display: block;
     width: min(960px, 90vw);
     padding: 0;
   }
 
-  :global(body.music-mode) .hero-copy,
-  :global(body.music-mode) .video-picker,
+  :global(body.music-mode) .hero,
+  :global(body.music-mode) .ticker,
+  :global(body.music-mode) .now-playing-copy,
   :global(body.music-mode) .upcoming {
     display: none;
   }
 
+  :global(body.music-mode) .hero-video {
+    box-shadow: none;
+  }
+
   @media (max-width: 860px) {
-    .hero {
+    .now-playing {
       grid-template-columns: 1fr;
     }
 
-    .hero .page-title {
+    .now-playing .section-title {
       min-height: 0;
+    }
+
+    .hero-video {
+      box-shadow: 8px 8px 0 var(--maple);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .video-pick,
-    .video-pick::before {
+    .glint,
+    .ticker-track {
+      animation: none;
+    }
+
+    .video-pick {
       transition: none;
     }
   }

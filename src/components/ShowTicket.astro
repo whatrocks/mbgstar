@@ -1,0 +1,38 @@
+---
+import { formatShowStart, googleCalendarUrl, showDateParts, type UpcomingShow } from '../data/shows';
+
+interface Props {
+  show: UpcomingShow;
+  /** Adds an "Add to calendar" link; needs the site origin for the event link. */
+  calendarOrigin?: string;
+}
+
+const { show, calendarOrigin } = Astro.props;
+const { weekday, month, day } = showDateParts(show.start);
+const [date, time] = formatShowStart(show.start).split(' · ');
+---
+
+<li class="ticket">
+  <div class="ticket-stub" aria-hidden="true">
+    <span class="ticket-month">{month}</span>
+    <span class="ticket-day">{day}</span>
+    <span class="ticket-weekday">{weekday}</span>
+  </div>
+  <div class="ticket-body">
+    <span class="ticket-meta">
+      <span class="visually-hidden">{weekday}, {date}, </span>{time}{show.detail && ` · ${show.detail}`}
+    </span>
+    <h3 class="ticket-venue">{show.venue}</h3>
+    {calendarOrigin && (
+      <a
+        class="button"
+        href={googleCalendarUrl(show, calendarOrigin)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Add the ${show.venue} show to Google Calendar`}
+      >
+        + Add to calendar
+      </a>
+    )}
+  </div>
+</li>

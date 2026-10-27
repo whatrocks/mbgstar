@@ -48,6 +48,22 @@ export function formatShowStart(start: string): string {
   return `${date} · ${time}`;
 }
 
+/**
+ * Splits a show's local start into the pieces a ticket stub shows:
+ * { weekday: 'Wed', month: 'Jan', day: '20' }. Parsed and formatted in UTC
+ * for the same reason as formatShowStart.
+ */
+export function showDateParts(start: string): { weekday: string; month: string; day: string } {
+  const date = new Date(`${start}Z`);
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat('en-US', { ...options, timeZone: 'UTC' }).format(date);
+  return {
+    weekday: part({ weekday: 'short' }),
+    month: part({ month: 'short' }),
+    day: part({ day: 'numeric' })
+  };
+}
+
 /** '2027-02-05T19:00:00' -> '20270205T190000' */
 function toCalendarStamp(local: string): string {
   return local.replace(/[-:]/g, '');
