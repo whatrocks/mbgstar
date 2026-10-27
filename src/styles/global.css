@@ -164,11 +164,11 @@ main {
 }
 
 .section {
-  padding: clamp(4rem, 10vw, 7rem) 0;
+  padding: clamp(2rem, 5vw, 3.25rem) 0 clamp(4rem, 10vw, 7rem);
   text-align: center;
 }
 
-/* Cream sections open with a thin orange strip. */
+/* Cream sections further down a page open with a thin orange strip. */
 .section--strip {
   border-top: 14px solid var(--orange);
 }

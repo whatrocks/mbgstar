@@ -1,15 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const videos: { id: string; title?: string }[] = [
+const videos = [
   { id: 'PkiwIzlOOww', title: 'Wake-Up Call' },
-  { id: 'jKuIO9XvSKI', title: 'Sunny Day' },
-  { id: 'Ls7FF78T6MI' }
+  { id: 'Ls7FF78T6MI', title: "Mary Jane's Last Dance - Tom Petty & the Heartbreakers" },
+  { id: 'jKuIO9XvSKI', title: 'Sunny Day' }
 ];
 ---
 
 <BaseLayout title="Music — Money Back Guarantee*">
-  <section class="section section--strip">
+  <section class="section">
     <div class="wrap">
       <h1 class="section-title">Music</h1>
       <div class="videos">
@@ -17,18 +17,16 @@ const videos: { id: string; title?: string }[] = [
           <figure>
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${video.id}?rel=0`}
-              title={video.title ? `${video.title} by Money Back Guarantee*` : 'Money Back Guarantee* video'}
+              title={`Money Back Guarantee*: ${video.title}`}
               loading="lazy"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerpolicy="strict-origin-when-cross-origin"
               allowfullscreen
             ></iframe>
-            {video.title && (
-              <figcaption>
-                <span class="video-title">{video.title}</span>
-                <span class="byline">Money Back Guarantee*</span>
-              </figcaption>
-            )}
+            <figcaption>
+              <span class="video-title">{video.title}</span>
+              <span class="byline">Money Back Guarantee*</span>
+            </figcaption>
           </figure>
         ))}
       </div>

@@ -69,9 +69,8 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(1.5rem, 4vw, 2.5rem);
-    min-height: calc(100svh - var(--header));
-    padding: clamp(2rem, 6vw, 4rem) var(--gutter);
+    gap: 1.25rem;
+    padding: 1rem var(--gutter) clamp(2rem, 4vw, 2.75rem);
   }
 
   /*
@@ -79,9 +78,10 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
    * so the outer few percent fade out and no edge shows. The letters move
    * across nearly the whole frame, which rules out cropping it tighter.
    */
+  /* Art, buttons and all come to about a third of the screen. */
   .hero-art {
     display: block;
-    width: min(100%, 60rem);
+    width: min(100%, 60rem, 50svh);
     height: auto;
     -webkit-mask-image:
       linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
@@ -95,9 +95,13 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
 
   .hero-actions {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 1rem;
-    width: min(22rem, 100%);
+  }
+
+  .hero-actions .button {
+    min-width: 15rem;
   }
 
   /* ---------- Music: one video at a time, arrows either side ---------- */
@@ -189,6 +193,11 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     .hero-art {
       width: calc(100% + 2 * var(--gutter));
       max-width: none;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+      width: 100%;
     }
 
     .carousel {
