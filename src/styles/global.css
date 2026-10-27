@@ -1,9 +1,9 @@
 /*
  * Poster theme. Tall condensed caps, square buttons, and full-bleed
- * sections that alternate between plain white and the water from the
- * Scam Likely EP cover, printed with a halftone screen. Golden Gate
- * International Orange is the one loud color: the header bar and the
- * strips that open each white section.
+ * sections that alternate between plain cream (the backdrop of the clay
+ * MBG* animation) and the water from the Scam Likely EP cover. Golden
+ * Gate International Orange is the one loud color: the header bar and
+ * the strips that open each cream section.
  */
 :root {
   --orange: #c0362c;
@@ -11,6 +11,8 @@
   --teal: #0f4f50;
   --ink: #111111;
   --white: #ffffff;
+  /* The clay animation's backdrop, so it sits on the page seamlessly. */
+  --cream: #e5dbd1;
   --muted: #5d6b6a;
   --line: #e4e4e4;
 
@@ -38,7 +40,7 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  background: var(--white);
+  background: var(--cream);
   font-family: var(--font-body);
   font-size: 1.0625rem;
   line-height: 1.55;
@@ -166,7 +168,7 @@ main {
   text-align: center;
 }
 
-/* White sections open with a thin orange strip. */
+/* Cream sections open with a thin orange strip. */
 .section--strip {
   border-top: 14px solid var(--orange);
 }
@@ -176,36 +178,10 @@ main {
   font-size: clamp(4.5rem, 14vw, 8.5rem);
 }
 
-/*
- * The water, printed: the cover's sea as a photo, with a fine halftone
- * dot screen over it. Text on it is white.
- */
+/* The water from the cover. Text on it is white. */
 .water {
-  position: relative;
-  isolation: isolate;
   color: var(--white);
   background: var(--teal) url("/water.webp") center / cover;
-  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.25);
-}
-
-.halftone::after,
-.water::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(rgba(0, 0, 0, 0.22) 0.9px, transparent 1.5px) 0 0 / 4px 4px;
-  mix-blend-mode: multiply;
-}
-
-.halftone {
-  position: relative;
-  isolation: isolate;
-}
-
-.halftone::after {
-  z-index: 1;
 }
 
 /* Wide-tracked caps, for a byline under a title. */

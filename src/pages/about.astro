@@ -3,13 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="About — Money Back Guarantee*">
-  <section class="banner halftone">
-    <img src="/band-duotone.webp" alt="Money Back Guarantee* playing under their banner" width="2400" height="1800" />
-    <h1 class="banner-title">About</h1>
-  </section>
-
   <section class="section section--strip">
     <div class="wrap about">
+      <h1 class="section-title">About</h1>
+      <img class="photo" src="/band.webp" alt="Money Back Guarantee* playing under their banner" width="2000" height="1500" />
       <p class="about-lede">
         A band of dads from Marin County and the East Bay, playing originals
         and covers after bedtime.
@@ -23,36 +20,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <style>
-  .banner {
-    display: grid;
-    height: clamp(20rem, 55vw, 36rem);
-    overflow: hidden;
-    background: var(--teal);
-  }
-
-  .banner > * {
-    grid-area: 1 / 1;
-  }
-
-  .banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 35%;
-  }
-
-  .banner-title {
-    position: relative;
-    z-index: 2;
-    align-self: end;
-    padding: 0 var(--gutter) clamp(1.5rem, 4vw, 2.5rem);
-    color: var(--white);
-    font-size: clamp(5rem, 18vw, 11rem);
-    text-align: center;
-  }
-
   .about {
     max-width: 52rem;
+  }
+
+  .photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
   }
 
   .about-lede {
@@ -69,5 +45,4 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     max-width: 34rem;
     font-size: clamp(1.15rem, 2.4vw, 1.35rem);
   }
-
 </style>
