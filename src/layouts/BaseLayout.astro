@@ -28,22 +28,22 @@ const navLinks = [
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#0b0b0b" />
+    <meta name="theme-color" content="#c0362c" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap"
     />
   </head>
   <body>
     <header class="site-header">
       <div class="wrap">
-        <a href="/" class="brand" aria-label="Money Back Guarantee* home">
-          <img class="cube" src="/mbg-cube.webp" alt="" width="96" height="96" />
-          <span class="brand-name">Money Back Guarantee*</span>
-        </a>
-        <nav class="site-nav" aria-label="Main">
+        <a href="/" class="brand">Money Back Guarantee*</a>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Main">
           {navLinks.map((link) => (
             <a href={link.href} aria-current={path === link.href ? 'page' : undefined}>{link.label}</a>
           ))}
@@ -57,31 +57,29 @@ const navLinks = [
       <div class="wrap">
         <div>
           <h2 class="footer-title">Stay in<br />the loop<span>*</span></h2>
+          <p class="footer-copy">Show dates and new songs, straight to your inbox. No spam. Money back guaranteed.*</p>
           <nav class="social-links" aria-label="Social media">
-            <a class="button" href="https://instagram.com/moneybackguaranteeasterisk" target="_blank" rel="noopener noreferrer">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <a aria-label="Instagram" href="https://instagram.com/moneybackguaranteeasterisk" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
               </svg>
-              <span>Instagram</span>
             </a>
-            <a class="button" href="https://youtube.com/@moneybackguaranteeasterisk" target="_blank" rel="noopener noreferrer">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <a aria-label="YouTube" href="https://youtube.com/@moneybackguaranteeasterisk" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path>
                 <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
               </svg>
-              <span>YouTube</span>
             </a>
-            <a class="button" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <a aria-label="Bandcamp" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor" aria-hidden="true">
                 <path d="M2 18l6-12h14L16 18H2z"></path>
               </svg>
-              <span>Bandcamp</span>
             </a>
           </nav>
         </div>
-        <div class="mailing-list frame">
+        <div class="mailing-list">
           <iframe
             src="https://moneybackguarantee.substack.com/embed"
             title="Subscribe to Money Back Guarantee* on Substack"
@@ -91,10 +89,18 @@ const navLinks = [
             scrolling="no"
           ></iframe>
         </div>
-        <p class="colophon">Money Back Guarantee* · Marin County &amp; the East Bay</p>
+        <p class="colophon"><span>Money Back Guarantee* · Marin County &amp; the East Bay</span><span>*Terms and conditions apply.</span></p>
       </div>
     </footer>
     <script>
+      const header = document.querySelector('.site-header');
+      const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+      toggle?.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', String(open));
+        header?.classList.toggle('is-open', open);
+      });
+
       let spaceHeld = false;
       document.addEventListener('keydown', (e) => {
         const t = e.target as HTMLElement | null;

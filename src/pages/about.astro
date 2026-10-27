@@ -3,16 +3,46 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="About — Money Back Guarantee*">
-  <div class="wrap">
-    <h1 class="page-title" style="--accent: var(--magenta)">About</h1>
-    <figure class="photo frame">
-      <img src="/band.jpg" alt="Money Back Guarantee*" />
-    </figure>
-    <p class="lede">
-      Money Back Guarantee* is a band of dads hailing from Marin County and the
-      East Bay playing originals and covers, after bedtime. They're always ready to rock, as
-      long as the dishes are done, the dog's walked, and the
-      laundry's running.
-    </p>
-  </div>
+  <section class="section section--strip">
+    <div class="wrap about">
+      <h1 class="section-title">About</h1>
+      <img class="photo" src="/band.webp" alt="Money Back Guarantee* playing under their banner" width="2000" height="1500" />
+      <p class="about-lede">
+        A band of dads from Marin County and the East Bay, playing originals
+        and covers after bedtime.
+      </p>
+      <p class="about-copy">
+        Always ready to rock, as long as the dishes are done, the dog's walked,
+        and the laundry's running.
+      </p>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .about {
+    max-width: 52rem;
+  }
+
+  .photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: clamp(2.5rem, 6vw, 3.5rem);
+  }
+
+  .about-lede {
+    margin: 0 0 1.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .about-copy {
+    margin: 0 auto;
+    max-width: 34rem;
+    font-size: clamp(1.15rem, 2.4vw, 1.35rem);
+  }
+</style>

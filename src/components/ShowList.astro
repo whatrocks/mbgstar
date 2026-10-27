@@ -1,0 +1,32 @@
+---
+import { formatShowStart, googleCalendarUrl, type UpcomingShow } from '../data/shows';
+
+interface Props {
+  shows: UpcomingShow[];
+  /** The site origin, for the event link in each "Add to calendar" button. */
+  origin: string;
+}
+
+const { shows, origin } = Astro.props;
+---
+
+<ul class="shows">
+  {shows.map((show) => (
+    <li>
+      <span class="show-info">
+        <span class="show-date">{formatShowStart(show.start)}</span>
+        <span class="show-venue">{show.venue}</span>
+        {show.detail && <span class="show-detail">{show.detail}</span>}
+      </span>
+      <a
+        class="button button--outline button--small"
+        href={googleCalendarUrl(show, origin)}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Add the ${show.venue} show to Google Calendar`}
+      >
+        Add to calendar
+      </a>
+    </li>
+  ))}
+</ul>

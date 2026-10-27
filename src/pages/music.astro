@@ -1,49 +1,79 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const videos: { id: string; title?: string }[] = [
+  { id: 'PkiwIzlOOww', title: 'Wake-Up Call' },
+  { id: 'jKuIO9XvSKI', title: 'Sunny Day' },
+  { id: 'Ls7FF78T6MI' }
+];
 ---
 
 <BaseLayout title="Music — Money Back Guarantee*">
-  <div class="wrap">
-    <h1 class="page-title" style="--accent: var(--yellow)">Music</h1>
-    <div class="video-grid">
-      <div class="frame">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/PkiwIzlOOww?si=BWUAiRo7E6wU-ED5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <section class="section section--strip">
+    <div class="wrap">
+      <h1 class="section-title">Music</h1>
+      <div class="videos">
+        {videos.map((video) => (
+          <figure>
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${video.id}?rel=0`}
+              title={video.title ? `${video.title} by Money Back Guarantee*` : 'Money Back Guarantee* video'}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+            {video.title && (
+              <figcaption>
+                <span class="video-title">{video.title}</span>
+                <span class="byline">Money Back Guarantee*</span>
+              </figcaption>
+            )}
+          </figure>
+        ))}
       </div>
-
-      <div class="frame">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ls7FF78T6MI?si=f3ibez8XMjQakHNb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
-
-      <div class="frame">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/jKuIO9XvSKI?si=58c-LQ-RffOmYmgp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </div>
+      <a class="button button--black listen" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen now</a>
     </div>
-  </div>
+  </section>
 </BaseLayout>
 
 <style>
-  .video-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+  .videos {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3.5rem, 8vw, 5.5rem);
+    max-width: 52rem;
+    margin: 0 auto;
   }
 
-  /* The first video plays the lead, full width. */
-  .video-grid > :first-child {
-    grid-column: 1 / -1;
+  figure {
+    margin: 0;
   }
 
-  @media (max-width: 760px) {
-    .video-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .video-grid iframe {
+  iframe {
+    display: block;
     width: 100%;
     aspect-ratio: 16 / 9;
     height: auto;
     border: 0;
-    background: #000;
+    background: var(--ink);
+  }
+
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1.5rem;
+  }
+
+  .video-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 8vw, 4.5rem);
+    font-weight: 700;
+    line-height: 0.92;
+    text-transform: uppercase;
+  }
+
+  .listen {
+    margin-top: clamp(3.5rem, 8vw, 5rem);
   }
 </style>

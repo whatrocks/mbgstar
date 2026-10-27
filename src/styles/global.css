@@ -1,29 +1,27 @@
 /*
- * NeXT theme. A black cube with four bright letters on it, after Paul
- * Rand's NeXT logo: everything sits on near-black, and red, green, yellow
- * and magenta are used only as small accents, in that order.
+ * Poster theme. Tall condensed caps, square buttons, and full-bleed
+ * sections that alternate between plain cream (the backdrop of the clay
+ * MBG* animation) and the water from the Scam Likely EP cover. Golden
+ * Gate International Orange is the one loud color: the header bar and
+ * the strips that open each cream section.
  */
 :root {
-  --bg: #0b0b0b;
-  --surface: #151515;
-  --line: #2b2b2b;
-  --ink: #f3f0ea;
-  --muted: #9b968e;
-  --paper: #f3f0ea;
+  --orange: #c0362c;
+  --orange-hot: #d8452f;
+  --teal: #0f4f50;
+  --ink: #111111;
+  --white: #ffffff;
+  /* The clay animation's backdrop, so it sits on the page seamlessly. */
+  --cream: #e5dbd1;
+  --muted: #5d6b6a;
+  --line: #e4e4e4;
 
-  --red: #f2382f;
-  --green: #3cc24a;
-  --yellow: #f7d224;
-  --magenta: #ea3a95;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Helvetica Neue", sans-serif;
 
-  /* The four logo colors as one rule. */
-  --stripe: linear-gradient(90deg, var(--red) 0 25%, var(--green) 25% 50%, var(--yellow) 50% 75%, var(--magenta) 75%);
-
-  --font-display: "Anton", "Impact", "Arial Narrow", sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, "Helvetica Neue", sans-serif;
-
-  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
   --max: 1100px;
+  --header: 4.5rem;
 }
 
 * {
@@ -34,6 +32,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -41,11 +40,10 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  background: var(--bg);
+  background: var(--cream);
   font-family: var(--font-body);
   font-size: 1.0625rem;
-  line-height: 1.6;
-  overflow-x: hidden;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -55,18 +53,18 @@ a {
 
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid var(--yellow);
+  outline: 3px solid var(--orange);
   outline-offset: 3px;
 }
 
 h1,
 h2,
 h3 {
+  margin: 0;
   font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 1;
+  font-weight: 700;
+  line-height: 0.92;
   text-transform: uppercase;
-  letter-spacing: 0.01em;
 }
 
 .wrap {
@@ -75,22 +73,24 @@ h3 {
   padding: 0 var(--gutter);
 }
 
-/* ---------- Header ---------- */
+/* Read aloud, not shown. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Header: a solid orange bar ---------- */
 
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: rgba(11, 11, 11, 0.88);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-}
-
-.site-header::after {
-  content: "";
-  display: block;
-  height: 3px;
-  background: var(--stripe);
+  z-index: 20;
+  color: var(--white);
+  background: var(--orange);
 }
 
 .site-header .wrap {
@@ -98,183 +98,158 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 4.5rem;
+  min-height: var(--header);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  text-decoration: none;
-}
-
-.brand-name {
   font-family: var(--font-display);
-  font-size: 1.35rem;
-  letter-spacing: 0.04em;
+  font-size: clamp(1.75rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1;
   text-transform: uppercase;
+  text-decoration: none;
   white-space: nowrap;
-}
-
-/*
- * The MBG* cube. Its black faces would sink into the header, so a faint
- * rim light picks out the edges.
- */
-.cube {
-  display: block;
-  width: 3rem;
-  height: 3rem;
-  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
-  transition: transform 200ms ease;
-}
-
-.brand:hover .cube {
-  transform: rotate(-8deg) scale(1.06);
 }
 
 .site-nav {
   display: flex;
-  gap: clamp(0.9rem, 3vw, 2rem);
+  gap: clamp(1.25rem, 3vw, 2.25rem);
 }
 
 .site-nav a {
-  --accent: var(--red);
-  position: relative;
-  padding: 0.25rem 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   text-decoration: none;
-  color: var(--muted);
-  transition: color 150ms ease;
-}
-
-.site-nav a:nth-child(2) { --accent: var(--green); }
-.site-nav a:nth-child(3) { --accent: var(--yellow); }
-.site-nav a:nth-child(4) { --accent: var(--magenta); }
-
-.site-nav a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -2px;
-  height: 2px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 180ms ease;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
 }
 
 .site-nav a:hover,
 .site-nav a[aria-current="page"] {
-  color: var(--ink);
+  text-decoration-line: underline;
 }
 
-.site-nav a:hover::after,
-.site-nav a[aria-current="page"]::after {
-  transform: scaleX(1);
+/* Three bars, like a stack of rules. Only on small screens. */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 2.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
-/* ---------- Main content ---------- */
+.menu-toggle span {
+  display: block;
+  height: 3px;
+  background: var(--white);
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(0.72rem) rotate(45deg); }
+.menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-0.72rem) rotate(-45deg); }
+
+/* ---------- Sections ---------- */
 
 main {
   flex: 1;
   width: 100%;
-  padding: clamp(2.5rem, 7vw, 5rem) 0 4rem;
 }
 
-/* Page title: huge condensed caps, with the asterisk in the next color. */
-.page-title {
-  margin: 0 0 clamp(2rem, 5vw, 3.5rem);
-  font-size: clamp(3.5rem, 13vw, 8.5rem);
-  line-height: 0.88;
+.section {
+  padding: clamp(4rem, 10vw, 7rem) 0;
+  text-align: center;
 }
 
-.page-title::after {
-  content: "*";
-  color: var(--accent, var(--red));
+/* Cream sections open with a thin orange strip. */
+.section--strip {
+  border-top: 14px solid var(--orange);
 }
 
-.page-title--plain::after {
-  content: none;
+.section-title {
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(4.5rem, 14vw, 8.5rem);
 }
 
-.section-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0 0 1.25rem;
+/* The water from the cover. Text on it is white. */
+.water {
+  color: var(--white);
+  background: var(--teal) url("/water.webp") center / cover;
+}
+
+/* Wide-tracked caps, for a byline under a title. */
+.byline {
+  margin: 0.5rem 0 0;
   font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
 }
 
-.section-label::before {
-  content: "";
-  width: 1.5rem;
-  height: 3px;
-  background: var(--accent, var(--red));
-}
+/* ---------- Buttons: square, condensed caps ---------- */
 
-.lede {
-  max-width: 38rem;
-  margin: 0 0 1.5rem;
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-  line-height: 1.5;
-}
-
-.frame {
-  background: #000;
-  border: 1px solid var(--line);
-}
-
-.frame > * {
-  display: block;
-  width: 100%;
-}
-
-.photo {
-  margin: 0 0 2.5rem;
-}
-
-.photo img {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: grayscale(0.15) contrast(1.05);
-}
-
-/* Outline button that fills with its accent on hover. */
 .button {
-  --accent: var(--yellow);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.1rem;
-  border: 1px solid var(--ink);
+  gap: 0.6rem;
+  min-width: min(100%, 22rem);
+  padding: 0.55rem 1.75rem 0.6rem;
+  border: 3px solid currentColor;
   background: transparent;
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 0.75rem;
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
   font-weight: 700;
-  letter-spacing: 0.16em;
+  line-height: 1;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-.button:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #000;
+.button--black {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
+.button--black:hover {
+  border-color: var(--orange);
+  background: var(--orange);
+}
+
+.button--white {
+  border-color: var(--white);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.button--white:hover {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: var(--white);
+}
+
+/* Outline on the water; fills white on hover. */
+.button--outline:hover {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.button--small {
+  min-width: 0;
+  padding: 0.4rem 1.1rem 0.45rem;
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
 }
 
 .button svg {
@@ -284,122 +259,126 @@ main {
 
 /* ---------- Show list ---------- */
 
-.show-list {
+.shows {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--line);
+  text-align: left;
 }
 
-.show-list li {
-  display: grid;
-  grid-template-columns: minmax(10rem, 13rem) 1fr auto;
+.shows li {
+  display: flex;
   align-items: center;
-  gap: 0.5rem 2rem;
-  padding: 1.35rem 0;
-  border-bottom: 1px solid var(--line);
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: 1.6rem 0;
+  border-bottom: 3px solid currentColor;
 }
 
-.show-date {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+.show-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.1;
   text-transform: uppercase;
-  color: var(--accent, var(--yellow));
 }
 
 .show-venue {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 1rem;
-}
-
-.show-name {
-  font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
-  line-height: 1.05;
-  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .show-detail {
-  font-size: 0.85rem;
-  color: var(--muted);
+  opacity: 0.85;
 }
 
-.show-list--past li {
-  grid-template-columns: minmax(10rem, 13rem) 1fr;
+.shows--past li {
   padding: 1rem 0;
+  border-bottom-width: 1px;
 }
 
-.show-list--past .show-date {
-  color: var(--muted);
-}
-
-.show-list--past .show-name {
-  font-size: 1.25rem;
-  color: var(--muted);
+.shows--past .show-info {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  opacity: 0.85;
 }
 
 /* ---------- Footer ---------- */
 
 .site-footer {
-  background: #000;
-}
-
-.site-footer::before {
-  content: "";
-  display: block;
-  height: 3px;
-  background: var(--stripe);
+  color: var(--white);
+  background: var(--ink);
 }
 
 .site-footer .wrap {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
-  padding-top: 3.5rem;
-  padding-bottom: 3rem;
+  padding-top: clamp(3.5rem, 8vw, 5rem);
+  padding-bottom: 2.5rem;
 }
 
 .footer-title {
-  margin: 0 0 1.25rem;
-  font-size: clamp(2.25rem, 6vw, 3.5rem);
-  line-height: 0.95;
+  margin-bottom: 1rem;
+  font-size: clamp(3rem, 8vw, 5rem);
 }
 
 .footer-title span {
-  color: var(--magenta);
+  color: var(--orange-hot);
 }
 
+.footer-copy {
+  max-width: 26rem;
+  margin: 0 0 2rem;
+  color: #c9c9c9;
+}
+
+/* A row of plain white icons. */
 .social-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1.75rem;
 }
 
-.social-links a:nth-child(1) { --accent: var(--red); }
-.social-links a:nth-child(2) { --accent: var(--green); }
-.social-links a:nth-child(3) { --accent: var(--yellow); }
+.social-links a {
+  display: block;
+  transition: color 150ms ease;
+}
+
+.social-links a:hover {
+  color: var(--orange-hot);
+}
+
+.social-links svg {
+  display: block;
+}
 
 .mailing-list {
   overflow: hidden;
+  background: var(--white);
 }
 
 .mailing-list iframe {
+  display: block;
   border: 0;
-  background: var(--paper);
 }
 
 .colophon {
   grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
   margin: 0;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--line);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
+  border-top: 1px solid #333;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #9a9a9a;
 }
 
 /* ---------- Music mode (space + M) ---------- */
@@ -413,7 +392,6 @@ body.music-mode main {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
 }
 
 @media (max-width: 760px) {
@@ -421,40 +399,50 @@ body.music-mode main {
     grid-template-columns: 1fr;
   }
 
-  .show-list li,
-  .show-list--past li {
-    grid-template-columns: 1fr auto;
+  .menu-toggle {
+    display: flex;
   }
 
-  .show-date {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 560px) {
-  .site-header .wrap {
+  /* The nav drops down under the bar when the menu is open. */
+  .site-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     flex-direction: column;
-    justify-content: center;
-    gap: 0.5rem;
-    padding-top: 0.85rem;
-    padding-bottom: 0.75rem;
+    gap: 0;
+    padding: 0.5rem var(--gutter) 1.5rem;
+    background: var(--orange);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s 180ms;
   }
 
-  .brand-name {
-    font-size: 1.15rem;
+  .site-header.is-open .site-nav {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: opacity 180ms ease, transform 180ms ease;
   }
 
-  .cube {
-    width: 2.5rem;
-    height: 2.5rem;
+  .site-nav a {
+    padding: 0.6rem 0;
+    font-size: 2.4rem;
+    font-weight: 700;
+    border-top: 2px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .shows li {
+    flex-wrap: wrap;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cube,
-  .site-nav a,
-  .site-nav a::after,
-  .button {
-    transition: none;
+  .button,
+  .menu-toggle span,
+  .site-nav,
+  .social-links a {
+    transition: none !important;
   }
 }
