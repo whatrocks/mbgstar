@@ -40,7 +40,7 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
       <h1 class="hero-title">Money Back Guarantee<span>*</span></h1>
       <p class="lede">A band of dads playing originals and covers once the kids are asleep.</p>
       <div class="hero-actions">
-        <a class="button button--sun" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
+        <a class="button button--orange" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
         <a class="button" href="/shows">See shows</a>
       </div>
     </div>
@@ -152,7 +152,7 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
     bottom: -70px;
     width: clamp(160px, 26vw, 300px);
     height: auto;
-    color: var(--sun);
+    color: var(--orange);
   }
 
   .hero .tag {
@@ -169,7 +169,7 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
   }
 
   .hero-title span {
-    color: var(--sun);
+    color: var(--orange);
   }
 
   .hero .lede {
@@ -188,7 +188,8 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
     overflow: hidden;
     margin: clamp(2.5rem, 6vw, 4rem) -1rem;
     padding: 0.85rem 0;
-    background: var(--sun);
+    background: var(--orange);
+    color: var(--paper);
     transform: rotate(-1.5deg);
   }
 
@@ -212,7 +213,7 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
   }
 
   .ticker :global(.star) {
-    color: var(--cream);
+    color: var(--maple);
   }
 
   @keyframes tick {
@@ -288,7 +289,8 @@ const ticker = ['Originals & covers', 'After bedtime', 'Dishes done', 'Dog walke
   }
 
   .video-pick[aria-pressed="true"] .video-pick-num {
-    background: var(--sun);
+    background: var(--orange);
+    color: var(--paper);
   }
 
   /* ---------- Upcoming ---------- */

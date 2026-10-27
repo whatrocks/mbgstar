@@ -1,8 +1,9 @@
 /*
  * Sunny theme, after the Scam Likely EP cover read in daylight: warm cream
- * paper, deep water teal for the ink, the sunburst orange and maple of the
- * guitar for color, and the white of the spray. Soft, chunky Fraunces for
- * headlines, film grain over everything.
+ * paper, deep water teal for the ink, Golden Gate International Orange as
+ * the one loud color, with the guitar's maple and the white of the spray
+ * backing it up. Soft, chunky Fraunces for headlines, film grain over
+ * everything.
  */
 :root {
   --cream: #f8f1e4;
@@ -14,8 +15,10 @@
   --sea: #145a5b;
   --aqua: #8fd8cd;
   --spray: #e3f5f1;
-  --sun: #f2862e;
-  --burnt: #b6491a;
+  /* International Orange, the Golden Gate's paint. */
+  --orange: #c0362c;
+  --orange-hot: #d8452f;
+  --orange-deep: #8e2219;
   --maple: #f5d39a;
   --tobacco: #5c2f17;
 
@@ -69,7 +72,7 @@ a {
 
 a:focus-visible,
 button:focus-visible {
-  outline: 3px solid var(--sun);
+  outline: 3px solid var(--orange);
   outline-offset: 3px;
 }
 
@@ -99,11 +102,11 @@ h3 {
   white-space: nowrap;
 }
 
-/* The asterisk mark: eight soft arms in sunburst orange. */
+/* The asterisk mark: eight soft arms in International Orange. */
 .star {
   display: inline-block;
   flex: none;
-  color: var(--sun);
+  color: var(--orange);
 }
 
 .star--spin {
@@ -186,7 +189,7 @@ main {
   padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(4rem, 8vw, 6rem);
 }
 
-/* Page title: big soft italic serif, the asterisk in sunburst orange. */
+/* Page title: big soft italic serif, the asterisk in International Orange. */
 .page-title {
   margin: 0 0 clamp(2rem, 5vw, 3rem);
   font-size: clamp(3.5rem, 12vw, 8rem);
@@ -195,7 +198,7 @@ main {
 
 .page-title::after {
   content: "*";
-  color: var(--sun);
+  color: var(--orange);
 }
 
 /* A rounded tag, like a sticker on a record sleeve. */
@@ -220,7 +223,7 @@ main {
 }
 
 .section-title em {
-  color: var(--burnt);
+  color: var(--orange);
 }
 
 .lede {
@@ -242,7 +245,7 @@ main {
   width: 100%;
 }
 
-/* Pill buttons. Sun is the main one; outline picks up whatever color it's on. */
+/* Pill buttons. Orange is the main one; outline picks up whatever color it's on. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -266,15 +269,16 @@ main {
   transform: translateY(-2px) rotate(-1deg);
 }
 
-.button--sun {
-  border-color: var(--sun);
-  background: var(--sun);
-  color: var(--ink);
-  box-shadow: 0 4px 0 var(--burnt);
+.button--orange {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: var(--paper);
+  box-shadow: 0 4px 0 var(--orange-deep);
 }
 
-.button--sun:hover {
-  background: #f79a48;
+.button--orange:hover {
+  border-color: var(--orange-hot);
+  background: var(--orange-hot);
 }
 
 .button svg {
@@ -317,14 +321,15 @@ main {
   justify-content: center;
   padding: 1.25rem 0.5rem;
   border-radius: 20px 0 0 20px;
-  background: var(--sun);
+  background: var(--orange);
+  color: var(--paper);
   border-right: 3px dotted var(--cream);
   line-height: 1;
   text-align: center;
 }
 
-.ticket:nth-child(3n + 2) .ticket-stub { background: var(--aqua); }
-.ticket:nth-child(3n + 3) .ticket-stub { background: var(--maple); }
+.ticket:nth-child(3n + 2) .ticket-stub { background: var(--aqua); color: var(--ink); }
+.ticket:nth-child(3n + 3) .ticket-stub { background: var(--maple); color: var(--ink); }
 
 .ticket-month,
 .ticket-weekday {
@@ -404,7 +409,7 @@ main {
 }
 
 .footer-title span {
-  color: var(--sun);
+  color: var(--orange);
 }
 
 .footer-copy {
