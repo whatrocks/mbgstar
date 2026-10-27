@@ -3,27 +3,40 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout title="Music — Money Back Guarantee*">
-  <h1>Music</h1>
-  <div class="video-grid">
-    <div class="clay-frame">
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/PkiwIzlOOww?si=BWUAiRo7E6wU-ED5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    </div>
+  <div class="wrap">
+    <h1 class="page-title" style="--accent: var(--yellow)">Music</h1>
+    <div class="video-grid">
+      <div class="frame">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/PkiwIzlOOww?si=BWUAiRo7E6wU-ED5" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
 
-    <div class="clay-frame">
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/Ls7FF78T6MI?si=f3ibez8XMjQakHNb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    </div>
+      <div class="frame">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ls7FF78T6MI?si=f3ibez8XMjQakHNb" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
 
-    <div class="clay-frame">
-      <iframe width="560" height="315" src="https://www.youtube.com/embed/jKuIO9XvSKI?si=58c-LQ-RffOmYmgp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      <div class="frame">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/jKuIO9XvSKI?si=58c-LQ-RffOmYmgp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
     </div>
   </div>
 </BaseLayout>
 
 <style>
   .video-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
+  }
+
+  /* The first video plays the lead, full width. */
+  .video-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 760px) {
+    .video-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .video-grid iframe {
@@ -31,6 +44,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     aspect-ratio: 16 / 9;
     height: auto;
     border: 0;
-    background: var(--ink);
+    background: #000;
   }
 </style>
