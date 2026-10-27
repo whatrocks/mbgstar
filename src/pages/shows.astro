@@ -6,106 +6,68 @@ const origin = Astro.url.origin;
 ---
 
 <BaseLayout title="Shows — Money Back Guarantee*">
-  <h1>Shows</h1>
+  <div class="wrap">
+    <h1 class="page-title" style="--accent: var(--green)">Shows</h1>
 
-  <section>
-    <h2>Upcoming Shows</h2>
-    <ul class="show-list">
-      {upcomingShows.map((show) => (
+    <section style="--accent: var(--yellow)">
+      <h2 class="section-label">Upcoming</h2>
+      <ul class="show-list">
+        {upcomingShows.map((show) => (
+          <li>
+            <span class="show-date">{formatShowStart(show.start)}</span>
+            <span class="show-venue">
+              <span class="show-name">{show.venue}</span>
+              {show.detail && <span class="show-detail">{show.detail}</span>}
+            </span>
+            <a
+              class="button"
+              href={googleCalendarUrl(show, origin)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Add to Google Calendar"
+              aria-label={`Add the ${show.venue} show to Google Calendar`}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Add to calendar</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section style="--accent: var(--magenta)">
+      <h2 class="section-label">Past</h2>
+      <ul class="show-list show-list--past">
         <li>
-          <span class="show-date">{formatShowStart(show.start)}</span>
-          <span class="show-name">{show.venue}</span>
-          {show.detail && <span class="show-detail">{show.detail}</span>}
-          <a
-            class="show-calendar clay-button"
-            href={googleCalendarUrl(show, origin)}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Add to Google Calendar"
-            aria-label={`Add the ${show.venue} show to Google Calendar`}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-          </a>
+          <span class="show-date">June 24, 2026</span>
+          <span class="show-name">HopMonk Tavern Novato</span>
         </li>
-      ))}
-    </ul>
-  </section>
-
-  <section>
-    <h2>Past Shows</h2>
-    <ul class="show-list">
-      <li>
-        <span class="show-date">June 24, 2026</span>
-        <span class="show-name">HopMonk Tavern Novato</span>
-      </li>
-      <li>
-        <span class="show-date">June 6, 2026</span>
-        <span class="show-name">Private House Party</span>
-      </li>
-      <li>
-        <span class="show-date">Feb 28, 2026</span>
-        <span class="show-name">Private House Party</span>
-      </li>
-    </ul>
-  </section>
+        <li>
+          <span class="show-date">June 6, 2026</span>
+          <span class="show-name">Private House Party</span>
+        </li>
+        <li>
+          <span class="show-date">Feb 28, 2026</span>
+          <span class="show-name">Private House Party</span>
+        </li>
+      </ul>
+    </section>
+  </div>
 </BaseLayout>
 
 <style>
   section {
-    margin-bottom: 2rem;
+    margin-bottom: clamp(3rem, 7vw, 4.5rem);
   }
 
-  .show-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.1rem;
-  }
-
-  .show-list li {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    padding: 0.8rem 1rem 0.8rem 1.25rem;
-  }
-
-  .show-date {
-    font-family: var(--font-display);
-    font-weight: 600;
-    color: var(--orange);
-    min-width: 9.5rem;
-  }
-
-  .show-name {
-    font-weight: 700;
-  }
-
-  .show-detail {
-    opacity: 0.7;
-  }
-
-  .show-calendar {
-    --lift: 3px;
-    --blob: 10px 7px 11px 6px / 7px 10px 6px 11px;
-    padding: 0.4rem;
-  }
-
-  .show-calendar svg {
-    display: block;
-  }
-
-  @media (max-width: 640px) {
-    .show-list li {
-      flex-wrap: wrap;
-      gap: 0.5rem 1rem;
+  @media (max-width: 560px) {
+    .button span {
+      display: none;
     }
   }
 </style>

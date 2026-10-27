@@ -1,110 +1,259 @@
 ---
-import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import clayMac from '../assets/clay-mac.png';
+import { formatShowStart, upcomingShows } from '../data/shows';
+import { featuredVideos } from '../data/videos';
+
+const [firstVideo] = featuredVideos;
+const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0`;
 ---
 
 <BaseLayout>
-  <figure class="image-stage image-stage--bare">
-    <button
-      type="button"
-      id="record-toggle"
-      class="record-toggle"
-      aria-label="Play Sunny Day"
-      aria-pressed="false"
-    >
-      <Image
-        src={clayMac}
-        alt="A smiling vintage Macintosh computer sculpted from clay, with asterisk eyes on a teal screen."
-        widths={[320, 480, 640, 768]}
-        sizes="(max-width: 480px) 90vw, (max-width: 768px) 70vw, 560px"
-        format="webp"
-        quality={80}
-        loading="eager"
-      />
-    </button>
-    <audio id="record-audio" src="/sunny-day.mp3" preload="none"></audio>
-  </figure>
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="section-label">Now showing</p>
+      <h1 class="page-title page-title--plain" id="video-title">{firstVideo.title}</h1>
+      <p class="lede">A band of dads from Marin County and the East Bay, playing originals and covers once the kids are asleep.</p>
+      <div class="hero-actions">
+        <a class="button" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen on Bandcamp</a>
+        <a class="button" href="/shows" style="--accent: var(--green)">See shows</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <div class="hero-video frame">
+        <iframe
+          id="video-player"
+          src={embedUrl(firstVideo.youtubeId)}
+          title={`${firstVideo.title} by Money Back Guarantee*`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <div class="video-picker" role="group" aria-label="Choose a video">
+        {featuredVideos.map((video, i) => (
+          <button
+            type="button"
+            class="video-pick"
+            data-id={video.youtubeId}
+            data-title={video.title}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+          >
+            <span class="video-pick-num">{String(i + 1).padStart(2, '0')}</span>
+            {video.title}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {upcomingShows.length > 0 && (
+    <section class="upcoming wrap" style="--accent: var(--yellow)">
+      <h2 class="section-label">Upcoming shows</h2>
+      <ul class="show-list">
+        {upcomingShows.map((show) => (
+          <li>
+            <span class="show-date">{formatShowStart(show.start)}</span>
+            <span class="show-venue">
+              <span class="show-name">{show.venue}</span>
+              {show.detail && <span class="show-detail">{show.detail}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <a class="button upcoming-more" href="/shows">All shows</a>
+    </section>
+  )}
 </BaseLayout>
 
 <style>
-  .record-toggle {
-    display: block;
-    width: min(560px, 100%);
-    margin: 0 auto;
-    padding: 0;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    filter: drop-shadow(0 18px 16px rgba(70, 40, 20, 0.28));
+  .hero {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    align-items: center;
+    gap: clamp(2rem, 4vw, 3.5rem);
   }
 
-  .record-toggle:focus-visible {
-    outline: 3px dashed var(--teal);
-    outline-offset: 6px;
-    border-radius: 24px;
+  .hero .page-title {
+    margin-bottom: 1.5rem;
   }
 
-  .record-toggle img {
-    display: block;
-    width: 100%;
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Sized so every title fits in two lines and the layout holds still. */
+  .hero .page-title {
+    min-height: 1.76em;
+    font-size: clamp(3.5rem, 8vw, 6.5rem);
+  }
+
+  .hero-video {
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .hero-video iframe {
+    aspect-ratio: 16 / 9;
     height: auto;
-    transform-origin: 50% 95%;
-    transition: transform 120ms ease;
+    border: 0;
   }
 
-  .record-toggle:hover img {
-    transform: scale(1.02, 0.98);
+  .video-picker {
+    display: flex;
+    margin-top: 1rem;
+    border-top: 1px solid var(--line);
   }
 
-  /* Stop-motion bop: held poses, no tweening between them. */
-  .record-toggle.is-playing img,
-  :global(body.music-mode) .record-toggle img {
-    animation: clay-bop 1.2s steps(1, end) infinite;
+  /* A tab per video; the playing one gets a colored bar on top. */
+  .video-pick {
+    --accent: var(--red);
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.9rem 0 0.25rem;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    text-transform: uppercase;
+    text-align: left;
+    cursor: pointer;
+    transition: color 150ms ease;
   }
 
-  @keyframes clay-bop {
-    0% { transform: rotate(0deg) scale(1, 1); }
-    12.5% { transform: rotate(-3deg) scale(1.03, 0.97) translateY(4px); }
-    25% { transform: rotate(-4deg) scale(0.98, 1.03) translateY(-10px); }
-    37.5% { transform: rotate(-1deg) scale(1.04, 0.96) translateY(3px); }
-    50% { transform: rotate(0deg) scale(1, 1); }
-    62.5% { transform: rotate(3deg) scale(1.03, 0.97) translateY(4px); }
-    75% { transform: rotate(4deg) scale(0.98, 1.03) translateY(-10px); }
-    87.5% { transform: rotate(1deg) scale(1.04, 0.96) translateY(3px); }
+  .video-pick:nth-child(2) { --accent: var(--green); }
+  .video-pick:nth-child(3) { --accent: var(--yellow); }
+  .video-pick:nth-child(4) { --accent: var(--magenta); }
+
+  .video-pick::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 1rem;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 200ms ease;
+  }
+
+  .video-pick:hover,
+  .video-pick[aria-pressed="true"] {
+    color: var(--ink);
+  }
+
+  .video-pick[aria-pressed="true"]::before {
+    transform: scaleX(1);
+  }
+
+  .video-pick-num {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+
+  .upcoming {
+    margin-top: clamp(3rem, 8vw, 6rem);
+  }
+
+  .upcoming-more {
+    margin-top: 1.75rem;
+  }
+
+  /* Music mode: just the video. */
+  :global(body.music-mode) .hero {
+    display: block;
+    width: min(960px, 90vw);
+    padding: 0;
+  }
+
+  :global(body.music-mode) .hero-copy,
+  :global(body.music-mode) .video-picker,
+  :global(body.music-mode) .upcoming {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+
+    .hero .page-title {
+      min-height: 0;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .record-toggle img {
-      animation-duration: 4s;
+    .video-pick,
+    .video-pick::before {
+      transition: none;
     }
   }
 </style>
 
 <script>
-  const button = document.getElementById('record-toggle') as HTMLButtonElement | null;
-  const audio = document.getElementById('record-audio') as HTMLAudioElement | null;
+  /*
+   * Plays the featured videos in turn: when one ends the next starts, and
+   * the last loops back to the first. The tabs jump straight to a video.
+   */
+  interface YTPlayer {
+    loadVideoById(id: string): void;
+  }
 
-  if (button && audio) {
-    const setPlaying = (playing: boolean) => {
-      button.classList.toggle('is-playing', playing);
-      button.setAttribute('aria-pressed', String(playing));
-      button.setAttribute('aria-label', playing ? 'Pause Sunny Day' : 'Play Sunny Day');
+  interface YTNamespace {
+    Player: new (
+      el: HTMLIFrameElement,
+      opts: { events: { onStateChange: (e: { data: number }) => void } }
+    ) => YTPlayer;
+    PlayerState: { ENDED: number };
+  }
+
+  const iframe = document.getElementById('video-player') as HTMLIFrameElement | null;
+  const title = document.getElementById('video-title');
+  const picks = [...document.querySelectorAll<HTMLButtonElement>('.video-pick')];
+
+  if (iframe && title && picks.length > 1) {
+    let current = 0;
+    let player: YTPlayer | null = null;
+
+    const play = (index: number) => {
+      current = index;
+      const pick = picks[index];
+      const id = pick.dataset.id!;
+      title.textContent = pick.dataset.title!;
+      iframe.title = `${pick.dataset.title} by Money Back Guarantee*`;
+      picks.forEach((p, i) => p.setAttribute('aria-pressed', String(i === index)));
+
+      if (player) {
+        player.loadVideoById(id);
+      } else {
+        iframe.src = `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0&autoplay=1`;
+      }
     };
 
-    button.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play().then(() => setPlaying(true)).catch(() => {});
-      } else {
-        audio.pause();
-        setPlaying(false);
-      }
-    });
+    picks.forEach((pick, i) => pick.addEventListener('click', () => play(i)));
 
-    audio.addEventListener('ended', () => {
-      audio.currentTime = 0;
-      setPlaying(false);
-    });
+    const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void };
+    w.onYouTubeIframeAPIReady = () => {
+      const YT = w.YT!;
+      player = new YT.Player(iframe, {
+        events: {
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.ENDED) play((current + 1) % picks.length);
+          }
+        }
+      });
+    };
+
+    const api = document.createElement('script');
+    api.src = 'https://www.youtube.com/iframe_api';
+    document.head.append(api);
   }
 </script>
