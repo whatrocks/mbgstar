@@ -1,33 +1,25 @@
 /*
- * Sunny theme, after the Scam Likely EP cover read in daylight: warm cream
- * paper, deep water teal for the ink, Golden Gate International Orange as
- * the one loud color, with the guitar's maple and the white of the spray
- * backing it up. Soft, chunky Fraunces for headlines, film grain over
- * everything.
+ * Poster theme. Tall condensed caps, square buttons, and full-bleed
+ * sections that alternate between plain white and the water from the
+ * Scam Likely EP cover, printed with a halftone screen. Golden Gate
+ * International Orange is the one loud color: the header bar and the
+ * strips that open each white section.
  */
 :root {
-  --cream: #f8f1e4;
-  --paper: #fffaf2;
-  --ink: #0f3a3c;
-  --muted: #5b7472;
-  --line: #e3d6c0;
-
-  --sea: #145a5b;
-  --aqua: #8fd8cd;
-  --spray: #e3f5f1;
-  /* International Orange, the Golden Gate's paint. */
   --orange: #c0362c;
   --orange-hot: #d8452f;
-  --orange-deep: #8e2219;
-  --maple: #f5d39a;
-  --tobacco: #5c2f17;
+  --teal: #0f4f50;
+  --ink: #111111;
+  --white: #ffffff;
+  --muted: #5d6b6a;
+  --line: #e4e4e4;
 
-  --font-display: "Fraunces", "Cooper Black", Georgia, serif;
-  --font-body: "DM Sans", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Helvetica Neue", sans-serif;
 
-  --radius: 28px;
-  --gutter: clamp(1rem, 4vw, 2.5rem);
-  --max: 1180px;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+  --max: 1100px;
+  --header: 4.5rem;
 }
 
 * {
@@ -46,24 +38,11 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  background: var(--cream);
+  background: var(--white);
   font-family: var(--font-body);
   font-size: 1.0625rem;
-  line-height: 1.6;
-  overflow-x: hidden;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-}
-
-/* Film grain over the whole page. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  pointer-events: none;
-  opacity: 0.09;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
 a {
@@ -79,11 +58,11 @@ button:focus-visible {
 h1,
 h2,
 h3 {
+  margin: 0;
   font-family: var(--font-display);
-  font-weight: 800;
-  font-variation-settings: "SOFT" 100, "WONK" 1;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 0.92;
+  text-transform: uppercase;
 }
 
 .wrap {
@@ -102,30 +81,14 @@ h3 {
   white-space: nowrap;
 }
 
-/* The asterisk mark: eight soft arms in International Orange. */
-.star {
-  display: inline-block;
-  flex: none;
-  color: var(--orange);
-}
-
-.star--spin {
-  animation: spin 24s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ---------- Header ---------- */
+/* ---------- Header: a solid orange bar ---------- */
 
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: rgba(248, 241, 228, 0.86);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  z-index: 20;
+  color: var(--white);
+  background: var(--orange);
 }
 
 .site-header .wrap {
@@ -133,152 +96,184 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 4.75rem;
+  min-height: var(--header);
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-}
-
-.brand .star {
-  width: 2.1rem;
-  height: 2.1rem;
-}
-
-.brand-name {
   font-family: var(--font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  font-style: italic;
-  font-variation-settings: "SOFT" 100, "WONK" 1;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.75rem, 4.5vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
   white-space: nowrap;
 }
 
 .site-nav {
   display: flex;
-  gap: 0.4rem;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
 }
 
 .site-nav a {
-  padding: 0.45rem 1rem;
-  border-radius: 999px;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 3px;
 }
 
-.site-nav a:hover {
-  background: var(--maple);
-}
-
+.site-nav a:hover,
 .site-nav a[aria-current="page"] {
-  background: var(--ink);
-  color: var(--cream);
+  text-decoration-line: underline;
 }
 
-/* ---------- Main content ---------- */
+/* Three bars, like a stack of rules. Only on small screens. */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 2.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.menu-toggle span {
+  display: block;
+  height: 3px;
+  background: var(--white);
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(0.72rem) rotate(45deg); }
+.menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-0.72rem) rotate(-45deg); }
+
+/* ---------- Sections ---------- */
 
 main {
   flex: 1;
   width: 100%;
-  padding: clamp(1.5rem, 4vw, 3rem) 0 clamp(4rem, 8vw, 6rem);
 }
 
-/* Page title: big soft italic serif, the asterisk in International Orange. */
-.page-title {
-  margin: 0 0 clamp(2rem, 5vw, 3rem);
-  font-size: clamp(3.5rem, 12vw, 8rem);
-  font-style: italic;
+.section {
+  padding: clamp(4rem, 10vw, 7rem) 0;
+  text-align: center;
 }
 
-.page-title::after {
-  content: "*";
-  color: var(--orange);
-}
-
-/* A rounded tag, like a sticker on a record sleeve. */
-.tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
-  padding: 0.35rem 0.9rem;
-  border: 1.5px solid currentColor;
-  border-radius: 999px;
-  font-family: var(--font-body);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+/* White sections open with a thin orange strip. */
+.section--strip {
+  border-top: 14px solid var(--orange);
 }
 
 .section-title {
-  margin: 0 0 1.5rem;
-  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(4.5rem, 14vw, 8.5rem);
 }
 
-.section-title em {
-  color: var(--orange);
+/*
+ * The water, printed: the cover's sea as a photo, with a fine halftone
+ * dot screen over it. Text on it is white.
+ */
+.water {
+  position: relative;
+  isolation: isolate;
+  color: var(--white);
+  background: var(--teal) url("/water.webp") center / cover;
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.25);
 }
 
-.lede {
-  max-width: 36rem;
-  margin: 0 0 1.75rem;
-  font-size: clamp(1.15rem, 2.2vw, 1.35rem);
-  line-height: 1.5;
+.halftone::after,
+.water::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(rgba(0, 0, 0, 0.22) 0.9px, transparent 1.5px) 0 0 / 4px 4px;
+  mix-blend-mode: multiply;
 }
 
-.frame {
-  overflow: hidden;
-  border-radius: calc(var(--radius) * 0.75);
-  background: var(--ink);
-  box-shadow: 0 2px 0 rgba(15, 58, 60, 0.08), 0 24px 50px -20px rgba(15, 58, 60, 0.45);
+.halftone {
+  position: relative;
+  isolation: isolate;
 }
 
-.frame > * {
-  display: block;
-  width: 100%;
+.halftone::after {
+  z-index: 1;
 }
 
-/* Pill buttons. Orange is the main one; outline picks up whatever color it's on. */
+/* Wide-tracked caps, for a byline under a title. */
+.byline {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ---------- Buttons: square, condensed caps ---------- */
+
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1.4rem;
-  border: 2px solid currentColor;
-  border-radius: 999px;
+  gap: 0.6rem;
+  min-width: min(100%, 22rem);
+  padding: 0.55rem 1.75rem 0.6rem;
+  border: 3px solid currentColor;
   background: transparent;
   color: inherit;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
   font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
-.button:hover {
-  transform: translateY(-2px) rotate(-1deg);
+.button--black {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
 }
 
-.button--orange {
+.button--black:hover {
   border-color: var(--orange);
   background: var(--orange);
-  color: var(--paper);
-  box-shadow: 0 4px 0 var(--orange-deep);
 }
 
-.button--orange:hover {
-  border-color: var(--orange-hot);
-  background: var(--orange-hot);
+.button--white {
+  border-color: var(--white);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.button--white:hover {
+  border-color: var(--orange);
+  background: var(--orange);
+  color: var(--white);
+}
+
+/* Outline on the water; fills white on hover. */
+.button--outline:hover {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.button--small {
+  min-width: 0;
+  padding: 0.4rem 1.1rem 0.45rem;
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
 }
 
 .button svg {
@@ -286,154 +281,106 @@ main {
   flex: none;
 }
 
-/* ---------- Show tickets ---------- */
+/* ---------- Show list ---------- */
 
-.tickets {
+.shows {
   list-style: none;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
-  gap: 1.25rem;
   margin: 0;
   padding: 0;
+  text-align: left;
 }
 
-/*
- * A ticket: date stub on the left, torn off along a dotted line with a
- * notch cut top and bottom.
- */
-.ticket {
-  position: relative;
-  display: grid;
-  grid-template-columns: 6.5rem 1fr;
-  background: var(--paper);
-  border-radius: 20px;
-  box-shadow: 0 1px 0 var(--line), 0 18px 40px -24px rgba(92, 47, 23, 0.45);
-  transition: transform 200ms ease;
+.shows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: 1.6rem 0;
+  border-bottom: 3px solid currentColor;
 }
 
-.ticket:nth-child(odd):hover { transform: rotate(-1.2deg); }
-.ticket:nth-child(even):hover { transform: rotate(1.2deg); }
-
-.ticket-stub {
+.show-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem 0.5rem;
-  border-radius: 20px 0 0 20px;
-  background: var(--orange);
-  color: var(--paper);
-  border-right: 3px dotted var(--cream);
-  line-height: 1;
-  text-align: center;
-}
-
-.ticket:nth-child(3n + 2) .ticket-stub { background: var(--aqua); color: var(--ink); }
-.ticket:nth-child(3n + 3) .ticket-stub { background: var(--maple); color: var(--ink); }
-
-.ticket-month,
-.ticket-weekday {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  gap: 0.2rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.1;
   text-transform: uppercase;
 }
 
-.ticket-day {
-  margin: 0.2rem 0;
-  font-family: var(--font-display);
-  font-size: 3rem;
-  font-weight: 900;
-  font-variation-settings: "SOFT" 100, "WONK" 1;
+.show-venue {
+  font-weight: 700;
 }
 
-.ticket-body {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  padding: 1.25rem 1.4rem;
+.show-detail {
+  opacity: 0.85;
 }
 
-.ticket-venue {
-  margin: 0;
-  font-size: 1.6rem;
-  line-height: 1.05;
+.shows--past li {
+  padding: 1rem 0;
+  border-bottom-width: 1px;
 }
 
-.ticket-meta {
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.ticket-body .button {
-  margin-top: auto;
-  padding: 0.45rem 0.9rem;
-  font-size: 0.8rem;
-  border-width: 1.5px;
+.shows--past .show-info {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  opacity: 0.85;
 }
 
 /* ---------- Footer ---------- */
 
 .site-footer {
-  position: relative;
-  color: var(--cream);
-  background: var(--sea);
-}
-
-/* The water's edge along the top of the footer. */
-.site-footer::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: 28px;
-  background: var(--sea);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='28'%3E%3Cpath d='M0 28V14C20 14 20 4 40 4s20 10 40 10 20-10 40-10v24z'/%3E%3C/svg%3E") repeat-x bottom / 120px 28px;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='28'%3E%3Cpath d='M0 28V14C20 14 20 4 40 4s20 10 40 10 20-10 40-10v24z'/%3E%3C/svg%3E") repeat-x bottom / 120px 28px;
+  color: var(--white);
+  background: var(--ink);
 }
 
 .site-footer .wrap {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
-  padding-top: 3.5rem;
+  padding-top: clamp(3.5rem, 8vw, 5rem);
   padding-bottom: 2.5rem;
 }
 
 .footer-title {
-  margin: 0 0 1rem;
-  font-size: clamp(2.6rem, 6vw, 4.25rem);
-  font-style: italic;
+  margin-bottom: 1rem;
+  font-size: clamp(3rem, 8vw, 5rem);
 }
 
 .footer-title span {
-  color: var(--orange);
+  color: var(--orange-hot);
 }
 
 .footer-copy {
   max-width: 26rem;
-  margin: 0 0 1.75rem;
-  color: var(--spray);
+  margin: 0 0 2rem;
+  color: #c9c9c9;
 }
 
+/* A row of plain white icons. */
 .social-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 1.75rem;
 }
 
-.social-links .button:hover {
-  background: var(--cream);
-  border-color: var(--cream);
-  color: var(--ink);
+.social-links a {
+  display: block;
+  transition: color 150ms ease;
+}
+
+.social-links a:hover {
+  color: var(--orange-hot);
+}
+
+.social-links svg {
+  display: block;
 }
 
 .mailing-list {
   overflow: hidden;
-  border-radius: 20px;
-  background: var(--paper);
+  background: var(--white);
 }
 
 .mailing-list iframe {
@@ -449,9 +396,13 @@ main {
   gap: 0.5rem 1.5rem;
   margin: 0;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(227, 245, 241, 0.2);
-  font-size: 0.85rem;
-  color: var(--aqua);
+  border-top: 1px solid #333;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9a9a9a;
 }
 
 /* ---------- Music mode (space + M) ---------- */
@@ -465,41 +416,57 @@ body.music-mode main {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
 }
 
 @media (max-width: 760px) {
   .site-footer .wrap {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 560px) {
-  .site-header .wrap {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.4rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+  .menu-toggle {
+    display: flex;
   }
 
-  .brand-name {
-    font-size: 1.2rem;
+  /* The nav drops down under the bar when the menu is open. */
+  .site-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    padding: 0.5rem var(--gutter) 1.5rem;
+    background: var(--orange);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s 180ms;
+  }
+
+  .site-header.is-open .site-nav {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: opacity 180ms ease, transform 180ms ease;
   }
 
   .site-nav a {
-    padding: 0.35rem 0.85rem;
+    padding: 0.6rem 0;
+    font-size: 2.4rem;
+    font-weight: 700;
+    border-top: 2px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .shows li {
+    flex-wrap: wrap;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .star--spin {
-    animation: none;
-  }
-
-  .site-nav a,
   .button,
-  .ticket {
-    transition: none;
+  .menu-toggle span,
+  .site-nav,
+  .social-links a {
+    transition: none !important;
   }
 }

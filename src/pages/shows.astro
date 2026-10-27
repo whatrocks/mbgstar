@@ -1,9 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ShowTicket from '../components/ShowTicket.astro';
+import ShowList from '../components/ShowList.astro';
 import { upcomingShows } from '../data/shows';
-
-const origin = Astro.url.origin;
 
 const pastShows = [
   { date: 'June 24, 2026', venue: 'HopMonk Tavern Novato' },
@@ -13,64 +11,35 @@ const pastShows = [
 ---
 
 <BaseLayout title="Shows — Money Back Guarantee*">
-  <div class="wrap">
-    <h1 class="page-title">Shows</h1>
+  <section class="section water page">
+    <div class="wrap">
+      <h1 class="section-title">Shows</h1>
+      <ShowList shows={upcomingShows} origin={Astro.url.origin} />
 
-    <section>
-      <p class="tag">Upcoming</p>
-      <ul class="tickets">
-        {upcomingShows.map((show) => <ShowTicket show={show} calendarOrigin={origin} />)}
-      </ul>
-    </section>
-
-    <section>
-      <p class="tag">Been there, rocked that</p>
-      <ul class="past">
+      <h2 class="past-title">Past shows</h2>
+      <ul class="shows shows--past">
         {pastShows.map((show) => (
           <li>
-            <span class="past-date">{show.date}</span>
-            <span class="past-venue">{show.venue}</span>
+            <span class="show-info">
+              <span class="show-date">{show.date}</span>
+              <span class="show-venue">{show.venue}</span>
+            </span>
           </li>
         ))}
       </ul>
-    </section>
-  </div>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
-  section + section {
-    margin-top: clamp(3.5rem, 8vw, 5rem);
+  /* The water runs the full height of the page. */
+  .page {
+    min-height: calc(100svh - var(--header));
   }
 
-  .past {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .past li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 2rem;
-    padding: 0.9rem 0;
-    border-bottom: 2px dotted var(--line);
-  }
-
-  .past-date {
-    min-width: 9rem;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--orange);
-  }
-
-  .past-venue {
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    font-weight: 700;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    color: var(--muted);
+  .past-title {
+    margin: clamp(4rem, 9vw, 6rem) 0 0.5rem;
+    font-size: clamp(2.5rem, 7vw, 4rem);
+    text-align: left;
   }
 </style>
