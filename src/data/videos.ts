@@ -6,6 +6,6 @@ export interface FeaturedVideo {
 
 /** The home page plays these in order, looping back to the first. */
 export const featuredVideos: FeaturedVideo[] = [
-  { title: 'Sunny Day', youtubeId: 'PkiwIzlOOww' },
-  { title: 'Wake-Up Call', youtubeId: 'jKuIO9XvSKI' }
+  { title: 'Sunny Day', youtubeId: 'jKuIO9XvSKI' },
+  { title: 'Wake-Up Call', youtubeId: 'PkiwIzlOOww' }
 ];
