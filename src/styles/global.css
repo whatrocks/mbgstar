@@ -117,34 +117,20 @@ h3 {
 }
 
 /*
- * The cube: MB over G*, one logo color per character, on a black tile
- * tipped back like the NeXT box.
+ * The MBG* cube. Its black faces would sink into the header, so a faint
+ * rim light picks out the edges.
  */
 .cube {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  place-items: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  padding: 0.2rem;
-  background: #000;
-  border: 1px solid #3a3a3a;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
-  transform: rotate(-28deg);
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  line-height: 1;
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.35)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6));
   transition: transform 200ms ease;
 }
 
 .brand:hover .cube {
-  transform: rotate(-16deg) scale(1.05);
+  transform: rotate(-8deg) scale(1.06);
 }
-
-.cube span:nth-child(1) { color: var(--red); }
-.cube span:nth-child(2) { color: var(--green); }
-.cube span:nth-child(3) { color: var(--yellow); }
-.cube span:nth-child(4) { color: var(--magenta); }
 
 .site-nav {
   display: flex;
@@ -459,9 +445,8 @@ body.music-mode main {
   }
 
   .cube {
-    width: 2.1rem;
-    height: 2.1rem;
-    font-size: 0.8rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
 
