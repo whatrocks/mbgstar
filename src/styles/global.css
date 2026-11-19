@@ -1,6 +1,6 @@
 /*
  * Poster theme. Tall condensed caps, square buttons, and full-bleed
- * cream sections. Golden Gate International Orange is the one loud
+ * newsprint-grey sections. Golden Gate International Orange is the one loud
  * color: the header bar and the strips that open each section.
  */
 :root {
@@ -9,8 +9,8 @@
   --teal: #0f4f50;
   --ink: #111111;
   --white: #ffffff;
-  /* The clay animation's backdrop, so it sits on the page seamlessly. */
-  --cream: #e5dbd1;
+  /* Newsprint grey: the page, under the posters and show listings. */
+  --paper: #ecebe7;
   --muted: #5d6b6a;
   --line: #e4e4e4;
 
@@ -38,7 +38,7 @@ body {
   display: flex;
   flex-direction: column;
   color: var(--ink);
-  background: var(--cream);
+  background: var(--paper);
   font-family: var(--font-body);
   font-size: 1.0625rem;
   line-height: 1.55;
