@@ -2,17 +2,32 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ShowList from '../components/ShowList.astro';
 import { upcomingShows } from '../data/shows';
-import { featuredVideos } from '../data/videos';
+import { heroVideo } from '../data/videos';
 
-const [firstVideo] = featuredVideos;
+const { youtubeId, title } = heroVideo;
 
 /*
  * Muted autoplay is the only kind browsers allow without a tap, and
- * playsinline keeps iOS from jumping to its fullscreen player. With no
- * controls it reads as a backdrop; the button below handles sound.
+ * playsinline keeps iOS from jumping to its fullscreen player. loop needs
+ * playlist set to the same video. With no controls it reads as a
+ * backdrop; the button below handles sound.
  */
-const embedUrl = (id: string) =>
-  `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&autoplay=1&mute=1&playsinline=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1`;
+const params = new URLSearchParams({
+  enablejsapi: '1',
+  origin: Astro.url.origin,
+  autoplay: '1',
+  mute: '1',
+  playsinline: '1',
+  loop: '1',
+  playlist: youtubeId,
+  controls: '0',
+  fs: '0',
+  rel: '0',
+  modestbranding: '1',
+  iv_load_policy: '3',
+  disablekb: '1'
+});
+const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`;
 ---
 
 <BaseLayout>
@@ -20,12 +35,20 @@ const embedUrl = (id: string) =>
     <div class="hero-video">
       <iframe
         id="video-player"
-        src={embedUrl(firstVideo.youtubeId)}
-        title={`${firstVideo.title} by Money Back Guarantee*`}
-        allow="autoplay; encrypted-media; picture-in-picture"
+        src={embedUrl}
+        title={`${title} by Money Back Guarantee*`}
+        allow="autoplay; encrypted-media"
         referrerpolicy="strict-origin-when-cross-origin"
         tabindex="-1"
       ></iframe>
+      <img
+        class="hero-poster"
+        id="hero-poster"
+        src={`https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg`}
+        onerror={`this.onerror=null;this.src='https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg'`}
+        alt=""
+        fetchpriority="high"
+      />
     </div>
     <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false" disabled>
       <svg class="icon-muted" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" aria-hidden="true">
@@ -81,6 +104,24 @@ const embedUrl = (id: string) =>
     height: max(100cqh, 56.25cqw);
     border: 0;
     transform: translate(-50%, -50%);
+  }
+
+  /*
+   * The thumbnail sits over the player until the video is actually
+   * playing, so YouTube's own play button and loading spinner never show.
+   * If a browser refuses to autoplay, the still stays.
+   */
+  .hero-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 600ms ease;
+  }
+
+  .hero.is-playing .hero-poster {
+    opacity: 0;
   }
 
   .sound-toggle {
@@ -159,6 +200,7 @@ const embedUrl = (id: string) =>
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .hero-poster,
     .sound-toggle {
       transition: none;
     }
@@ -166,15 +208,14 @@ const embedUrl = (id: string) =>
 </style>
 
 <script>
-  import { featuredVideos } from '../data/videos';
-
   /*
-   * Plays the featured videos in turn, muted, looping back to the first
-   * after the last. The button turns the sound on and off.
+   * The video loops on its own (loop=1 in the URL); this just keeps it
+   * going, lifts the still off it once it's playing, and runs the sound
+   * button.
    */
   interface YTPlayer {
-    loadVideoById(id: string): void;
     playVideo(): void;
+    seekTo(seconds: number, allowSeekAhead: boolean): void;
     mute(): void;
     unMute(): void;
     setVolume(volume: number): void;
@@ -190,14 +231,14 @@ const embedUrl = (id: string) =>
         };
       }
     ) => YTPlayer;
-    PlayerState: { ENDED: number };
+    PlayerState: { ENDED: number; PLAYING: number; PAUSED: number };
   }
 
+  const hero = document.querySelector<HTMLElement>('.hero');
   const iframe = document.getElementById('video-player') as HTMLIFrameElement | null;
   const toggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
 
-  if (iframe && toggle) {
-    let current = 0;
+  if (hero && iframe && toggle) {
     let player: YTPlayer | null = null;
     let soundOn = false;
 
@@ -207,16 +248,17 @@ const embedUrl = (id: string) =>
       if (label) label.textContent = soundOn ? 'Mute' : 'Tap for sound';
     };
 
+    // A tap is also what a browser that blocked autoplay is waiting for.
     toggle.addEventListener('click', () => {
       if (!player) return;
       soundOn = !soundOn;
       if (soundOn) {
         player.unMute();
         player.setVolume(100);
-        player.playVideo();
       } else {
         player.mute();
       }
+      player.playVideo();
       showSound();
     });
 
@@ -227,14 +269,20 @@ const embedUrl = (id: string) =>
         events: {
           onReady: () => {
             toggle.disabled = false;
+            player!.mute();
             player!.playVideo();
           },
           onStateChange: (e) => {
-            if (e.data !== YT.PlayerState.ENDED) return;
-            current = (current + 1) % featuredVideos.length;
-            const video = featuredVideos[current];
-            iframe.title = `${video.title} by Money Back Guarantee*`;
-            player!.loadVideoById(video.youtubeId);
+            if (e.data === YT.PlayerState.PLAYING) {
+              hero.classList.add('is-playing');
+            } else if (e.data === YT.PlayerState.ENDED) {
+              player!.seekTo(0, true);
+              player!.playVideo();
+            } else if (e.data === YT.PlayerState.PAUSED) {
+              // An ambient video doesn't stay paused (iOS pauses it when
+              // the tab is backgrounded, for one).
+              player!.playVideo();
+            }
           }
         }
       });

@@ -4,8 +4,5 @@ export interface FeaturedVideo {
   youtubeId: string;
 }
 
-/** The home page plays these in order, looping back to the first. */
-export const featuredVideos: FeaturedVideo[] = [
-  { title: 'Sunny Day', youtubeId: 'jKuIO9XvSKI' },
-  { title: 'Wake-Up Call', youtubeId: 'PkiwIzlOOww' }
-];
+/** Plays on a loop, muted, behind the top of the home page. */
+export const heroVideo: FeaturedVideo = { title: 'Wake-Up Call', youtubeId: 'PkiwIzlOOww' };
