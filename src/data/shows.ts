@@ -21,7 +21,11 @@ const SHOW_TIMEZONE = 'America/Los_Angeles';
 export const upcomingShows: UpcomingShow[] = [
   {
     venue: 'HopMonk Tavern Novato',
-    start: '2027-01-20T19:00:00'
+    start: '2027-01-20T19:00:00',
+    poster: {
+      src: '/posters/2027-01-20-hopmonk-tavern-novato.webp',
+      alt: 'Poster: Money Back Guarantee* live at HopMonk Tavern Novato, Wednesday, January 20, 2027 at 7 PM. All ages, no cover, great for kids, food and beer. Don’t miss it!'
+    }
   },
   {
     venue: 'Paper Mill Creek Saloon',
