@@ -5,49 +5,39 @@ import { upcomingShows } from '../data/shows';
 import { featuredVideos } from '../data/videos';
 
 const [firstVideo] = featuredVideos;
-const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&rel=0`;
+
+/*
+ * Muted autoplay is the only kind browsers allow without a tap, and
+ * playsinline keeps iOS from jumping to its fullscreen player. With no
+ * controls it reads as a backdrop; the button below handles sound.
+ */
+const embedUrl = (id: string) =>
+  `https://www.youtube-nocookie.com/embed/${id}?enablejsapi=1&autoplay=1&mute=1&playsinline=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1`;
 ---
 
 <BaseLayout>
-  <section class="hero">
-    <img
-      class="hero-art"
-      src="/mbg-clay.webp"
-      alt="MBG* in clay letters"
-      width="1016"
-      height="504"
-    />
-    <div class="hero-actions">
-      <a class="button button--black" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen now</a>
-      <a class="button button--black" href="/shows">See shows</a>
+  <section class="hero" aria-label="Featured video">
+    <div class="hero-video">
+      <iframe
+        id="video-player"
+        src={embedUrl(firstVideo.youtubeId)}
+        title={`${firstVideo.title} by Money Back Guarantee*`}
+        allow="autoplay; encrypted-media; picture-in-picture"
+        referrerpolicy="strict-origin-when-cross-origin"
+        tabindex="-1"
+      ></iframe>
     </div>
-  </section>
-
-  <section class="section section--strip music">
-    <div class="wrap">
-      <h2 class="section-title">Music</h2>
-      <div class="carousel">
-        <button class="carousel-arrow" type="button" data-step="-1" aria-label="Previous video">
-          <svg viewBox="0 0 24 48" width="28" height="56" aria-hidden="true"><path d="M22 2 2 24l20 22" fill="none" stroke="currentColor" stroke-width="3" /></svg>
-        </button>
-        <div class="carousel-video">
-          <iframe
-            id="video-player"
-            src={embedUrl(firstVideo.youtubeId)}
-            title={`${firstVideo.title} by Money Back Guarantee*`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
-        </div>
-        <button class="carousel-arrow" type="button" data-step="1" aria-label="Next video">
-          <svg viewBox="0 0 24 48" width="28" height="56" aria-hidden="true"><path d="m2 2 20 22L2 46" fill="none" stroke="currentColor" stroke-width="3" /></svg>
-        </button>
-      </div>
-      <h3 class="video-title" id="video-title" aria-live="polite">{firstVideo.title}</h3>
-      <p class="byline">Money Back Guarantee*</p>
-      <a class="button button--black listen" href="https://mbgstar.bandcamp.com" target="_blank" rel="noopener noreferrer">Listen now</a>
-    </div>
+    <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false" disabled>
+      <svg class="icon-muted" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" aria-hidden="true">
+        <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
+        <path d="m23 9-6 6M17 9l6 6" />
+      </svg>
+      <svg class="icon-sound" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" aria-hidden="true">
+        <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
+        <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
+      </svg>
+      <span class="sound-label">Tap for sound</span>
+    </button>
   </section>
 
   {upcomingShows.length > 0 && (
@@ -62,97 +52,94 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
 </BaseLayout>
 
 <style>
-  /* ---------- Hero: the clay letters, straight on the cream ---------- */
+  /* ---------- Hero: the video, filling the screen under the header ---------- */
 
   .hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
-    padding: 1rem var(--gutter) clamp(2rem, 4vw, 2.75rem);
-  }
-
-  /*
-   * Its backdrop is the page's cream. The backdrop isn't perfectly flat,
-   * so the outer few percent fade out and no edge shows. The letters move
-   * across nearly the whole frame, which rules out cropping it tighter.
-   */
-  /* Art, buttons and all come to about a third of the screen. */
-  .hero-art {
-    display: block;
-    width: min(100%, 60rem, 50svh);
-    height: auto;
-    -webkit-mask-image:
-      linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
-      linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
-    -webkit-mask-composite: source-in;
-    mask-image:
-      linear-gradient(to right, transparent, #000 9%, #000 91%, transparent),
-      linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
-    mask-composite: intersect;
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-  }
-
-  .hero-actions .button {
-    min-width: 15rem;
-  }
-
-  /* ---------- Music: one video at a time, arrows either side ---------- */
-
-  .carousel {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: clamp(0.75rem, 3vw, 2rem);
-    max-width: 52rem;
-    margin: 0 auto;
-  }
-
-  .carousel-video iframe {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    height: auto;
-    border: 0;
+    position: relative;
+    height: calc(100svh - var(--header));
+    min-height: 20rem;
+    overflow: hidden;
     background: var(--ink);
   }
 
-  .carousel-arrow {
-    display: grid;
-    place-items: center;
-    padding: 0.5rem;
+  /*
+   * Cover, like object-fit for an image: the iframe is scaled so the 16:9
+   * picture fills the box whatever its shape, and the overflow is cropped.
+   */
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+    pointer-events: none;
+  }
+
+  .hero-video iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100cqw, 177.78cqh);
+    height: max(100cqh, 56.25cqw);
     border: 0;
-    background: none;
-    color: var(--ink);
+    transform: translate(-50%, -50%);
+  }
+
+  .sound-toggle {
+    position: absolute;
+    right: var(--gutter);
+    bottom: var(--gutter);
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1.1rem 0.6rem 0.9rem;
+    border: 3px solid var(--white);
+    background: var(--ink);
+    color: var(--white);
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3vw, 1.6rem);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: color 150ms ease, transform 150ms ease;
+    transition: background 150ms ease, border-color 150ms ease, opacity 150ms ease;
   }
 
-  .carousel-arrow:hover {
-    color: var(--orange);
+  .sound-toggle:hover {
+    border-color: var(--orange);
+    background: var(--orange);
   }
 
-  .carousel-arrow[hidden] {
+  .sound-toggle:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .sound-toggle svg {
+    display: block;
+    flex: none;
+  }
+
+  .sound-toggle .icon-sound,
+  .sound-toggle[aria-pressed="true"] .icon-muted {
     display: none;
   }
 
-  .carousel-arrow[data-step="-1"]:hover { transform: translateX(-3px); }
-  .carousel-arrow[data-step="1"]:hover { transform: translateX(3px); }
-
-  .video-title {
-    margin-top: clamp(1.75rem, 4vw, 2.5rem);
-    font-size: clamp(3rem, 9vw, 5rem);
+  .sound-toggle[aria-pressed="true"] .icon-sound {
+    display: block;
   }
 
-  .listen {
-    margin-top: clamp(2.5rem, 6vw, 3.5rem);
+  /* Once the sound is on, the button shrinks to just its icon. */
+  .sound-toggle[aria-pressed="true"] {
+    padding: 0.55rem;
+  }
+
+  .sound-toggle[aria-pressed="true"] .sound-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   /* ---------- Shows on the water ---------- */
@@ -161,61 +148,18 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     margin-top: clamp(2.5rem, 6vw, 3.5rem);
   }
 
-  /* Music mode: just the video. */
-  :global(body.music-mode) .music {
-    width: min(960px, 90vw);
-    padding: 0;
-    border: 0;
+  /* Music mode: just the video, the whole screen. */
+  :global(body.music-mode) .hero {
+    width: 100%;
+    height: 100svh;
   }
 
-  :global(body.music-mode) .hero,
-  :global(body.music-mode) .upcoming,
-  :global(body.music-mode) .section-title,
-  :global(body.music-mode) .carousel-arrow,
-  :global(body.music-mode) .video-title,
-  :global(body.music-mode) .byline,
-  :global(body.music-mode) .listen {
+  :global(body.music-mode) .upcoming {
     display: none;
   }
 
-  :global(body.music-mode) .carousel {
-    display: block;
-    max-width: none;
-  }
-
-  @media (max-width: 560px) {
-    /* Edge to edge, and only as tall as it needs to be. */
-    .hero {
-      min-height: 0;
-      padding: 1.5rem var(--gutter) 3rem;
-    }
-
-    .hero-art {
-      width: calc(100% + 2 * var(--gutter));
-      max-width: none;
-    }
-
-    .hero-actions {
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .carousel {
-      gap: 0.25rem;
-    }
-
-    .carousel-arrow {
-      padding: 0.25rem;
-    }
-
-    .carousel-arrow svg {
-      width: 18px;
-      height: 36px;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .carousel-arrow {
+    .sound-toggle {
       transition: none;
     }
   }
@@ -225,53 +169,72 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
   import { featuredVideos } from '../data/videos';
 
   /*
-   * Plays the featured videos in turn: when one ends the next starts, and
-   * the last loops back to the first. The arrows step through them.
+   * Plays the featured videos in turn, muted, looping back to the first
+   * after the last. The button turns the sound on and off.
    */
   interface YTPlayer {
     loadVideoById(id: string): void;
+    playVideo(): void;
+    mute(): void;
+    unMute(): void;
+    setVolume(volume: number): void;
   }
 
   interface YTNamespace {
     Player: new (
       el: HTMLIFrameElement,
-      opts: { events: { onStateChange: (e: { data: number }) => void } }
+      opts: {
+        events: {
+          onReady: () => void;
+          onStateChange: (e: { data: number }) => void;
+        };
+      }
     ) => YTPlayer;
     PlayerState: { ENDED: number };
   }
 
   const iframe = document.getElementById('video-player') as HTMLIFrameElement | null;
-  const title = document.getElementById('video-title');
-  const arrows = [...document.querySelectorAll<HTMLButtonElement>('.carousel-arrow')];
+  const toggle = document.getElementById('sound-toggle') as HTMLButtonElement | null;
 
-  if (iframe && title && featuredVideos.length > 1) {
+  if (iframe && toggle) {
     let current = 0;
     let player: YTPlayer | null = null;
+    let soundOn = false;
 
-    const play = (index: number) => {
-      current = (index + featuredVideos.length) % featuredVideos.length;
-      const video = featuredVideos[current];
-      title.textContent = video.title;
-      iframe.title = `${video.title} by Money Back Guarantee*`;
-
-      if (player) {
-        player.loadVideoById(video.youtubeId);
-      } else {
-        iframe.src = `https://www.youtube-nocookie.com/embed/${video.youtubeId}?enablejsapi=1&rel=0&autoplay=1`;
-      }
+    const label = toggle.querySelector('.sound-label');
+    const showSound = () => {
+      toggle.setAttribute('aria-pressed', String(soundOn));
+      if (label) label.textContent = soundOn ? 'Mute' : 'Tap for sound';
     };
 
-    arrows.forEach((arrow) =>
-      arrow.addEventListener('click', () => play(current + Number(arrow.dataset.step)))
-    );
+    toggle.addEventListener('click', () => {
+      if (!player) return;
+      soundOn = !soundOn;
+      if (soundOn) {
+        player.unMute();
+        player.setVolume(100);
+        player.playVideo();
+      } else {
+        player.mute();
+      }
+      showSound();
+    });
 
     const w = window as unknown as { YT?: YTNamespace; onYouTubeIframeAPIReady?: () => void };
     w.onYouTubeIframeAPIReady = () => {
       const YT = w.YT!;
       player = new YT.Player(iframe, {
         events: {
+          onReady: () => {
+            toggle.disabled = false;
+            player!.playVideo();
+          },
           onStateChange: (e) => {
-            if (e.data === YT.PlayerState.ENDED) play(current + 1);
+            if (e.data !== YT.PlayerState.ENDED) return;
+            current = (current + 1) % featuredVideos.length;
+            const video = featuredVideos[current];
+            iframe.title = `${video.title} by Money Back Guarantee*`;
+            player!.loadVideoById(video.youtubeId);
           }
         }
       });
@@ -280,7 +243,5 @@ const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?e
     const api = document.createElement('script');
     api.src = 'https://www.youtube.com/iframe_api';
     document.head.append(api);
-  } else {
-    arrows.forEach((arrow) => (arrow.hidden = true));
   }
 </script>
