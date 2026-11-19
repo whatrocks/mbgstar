@@ -4,6 +4,12 @@ export interface UpcomingShow {
   start: string;
   /** Optional extra line, e.g. a cover charge. */
   detail?: string;
+  /** Optional gig poster, a path under public/ (put them in public/posters/). */
+  poster?: {
+    src: string;
+    /** What the poster says, for screen readers: the lineup, mostly. */
+    alt: string;
+  };
 }
 
 /** Shows run two hours. */
@@ -20,7 +26,11 @@ export const upcomingShows: UpcomingShow[] = [
   {
     venue: 'Paper Mill Creek Saloon',
     start: '2027-02-05T19:00:00',
-    detail: '$10 cover'
+    detail: '$10 cover',
+    poster: {
+      src: '/posters/2027-02-05-paper-mill-creek-saloon.webp',
+      alt: 'Poster: Paper Mill Creek Saloon, Friday, Feb 5th, 7 PM, $10 cover. With Kevin Moan & the Howling, Torpedo Wharf and Money Back Guarantee*.'
+    }
   }
 ];
 

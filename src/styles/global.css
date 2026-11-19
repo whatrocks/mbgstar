@@ -1,9 +1,7 @@
 /*
  * Poster theme. Tall condensed caps, square buttons, and full-bleed
- * sections that alternate between plain cream (the backdrop of the clay
- * MBG* animation) and the water from the Scam Likely EP cover. Golden
- * Gate International Orange is the one loud color: the header bar and
- * the strips that open each cream section.
+ * cream sections. Golden Gate International Orange is the one loud
+ * color: the header bar and the strips that open each section.
  */
 :root {
   --orange: #c0362c;
@@ -178,12 +176,6 @@ main {
   font-size: clamp(4.5rem, 14vw, 8.5rem);
 }
 
-/* The water from the cover. Text on it is white. */
-.water {
-  color: var(--white);
-  background: var(--teal) url("/water.webp") center / cover;
-}
-
 /* Wide-tracked caps, for a byline under a title. */
 .byline {
   margin: 0.5rem 0 0;
@@ -240,10 +232,11 @@ main {
   color: var(--white);
 }
 
-/* Outline on the water; fills white on hover. */
+/* Outline in the text color; fills ink on hover. */
 .button--outline:hover {
-  background: var(--white);
-  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
 }
 
 .button--small {
@@ -273,6 +266,30 @@ main {
   gap: 1rem 2rem;
   padding: 1.6rem 0;
   border-bottom: 3px solid currentColor;
+}
+
+.shows li.has-poster {
+  display: grid;
+  grid-template-columns: clamp(9rem, 22vw, 14rem) 1fr auto;
+  gap: 1rem clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* A gig poster, like one stuck to the wall. Opens full size. */
+.show-poster {
+  display: block;
+  border: 3px solid var(--ink);
+  background: var(--white);
+  transition: transform 150ms ease;
+}
+
+.show-poster:hover {
+  transform: rotate(-1.5deg) scale(1.02);
+}
+
+.show-poster img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .show-info {
@@ -436,10 +453,21 @@ body.music-mode main {
   .shows li {
     flex-wrap: wrap;
   }
+
+  /* Poster first, as big as the screen allows, then the details. */
+  .shows li.has-poster {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .show-poster {
+    width: min(100%, 26rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .button,
+  .show-poster,
   .menu-toggle span,
   .site-nav,
   .social-links a {

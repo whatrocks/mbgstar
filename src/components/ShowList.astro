@@ -12,7 +12,12 @@ const { shows, origin } = Astro.props;
 
 <ul class="shows">
   {shows.map((show) => (
-    <li>
+    <li class:list={{ 'has-poster': show.poster }}>
+      {show.poster && (
+        <a class="show-poster" href={show.poster.src} target="_blank" rel="noopener noreferrer">
+          <img src={show.poster.src} alt={show.poster.alt} loading="lazy" decoding="async" />
+        </a>
+      )}
       <span class="show-info">
         <span class="show-date">{formatShowStart(show.start)}</span>
         <span class="show-venue">{show.venue}</span>

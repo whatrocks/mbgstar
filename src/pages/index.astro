@@ -64,11 +64,11 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
   </section>
 
   {upcomingShows.length > 0 && (
-    <section class="section water upcoming">
+    <section class="section section--strip upcoming">
       <div class="wrap">
         <h2 class="section-title">Shows</h2>
         <ShowList shows={upcomingShows} origin={Astro.url.origin} />
-        <a class="button button--white all-shows" href="/shows">All shows</a>
+        <a class="button button--black all-shows" href="/shows">All shows</a>
       </div>
     </section>
   )}
@@ -183,7 +183,7 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
     white-space: nowrap;
   }
 
-  /* ---------- Shows on the water ---------- */
+  /* ---------- Shows ---------- */
 
   .all-shows {
     margin-top: clamp(2.5rem, 6vw, 3.5rem);

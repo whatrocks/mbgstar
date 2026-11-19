@@ -11,7 +11,7 @@ const pastShows = [
 ---
 
 <BaseLayout title="Shows — Money Back Guarantee*">
-  <section class="section water page">
+  <section class="section page">
     <div class="wrap">
       <h1 class="section-title">Shows</h1>
       <ShowList shows={upcomingShows} origin={Astro.url.origin} />
@@ -32,7 +32,6 @@ const pastShows = [
 </BaseLayout>
 
 <style>
-  /* The water runs the full height of the page. */
   .page {
     min-height: calc(100svh - var(--header));
   }
