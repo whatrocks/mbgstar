@@ -2,7 +2,7 @@ export interface FeaturedVideo {
   title: string;
   /** YouTube video ID, the v= part of the watch URL. */
   youtubeId: string;
-  /** Where to start (and loop back to), in seconds. Defaults to 0. */
+  /** Where the first play starts, in seconds; loops go from 0:00. Defaults to 0. */
   startSeconds?: number;
 }
 

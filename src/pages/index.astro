@@ -8,10 +8,10 @@ const { youtubeId, title, startSeconds = 0 } = heroVideo;
 
 /*
  * Muted autoplay is the only kind browsers allow without a tap, and
- * playsinline keeps iOS from jumping to its fullscreen player. It starts
- * at startSeconds, and the script below loops it back there (YouTube's own
- * loop=1 would go back to 0:00). With no controls it reads as a backdrop;
- * the button below handles sound.
+ * playsinline keeps iOS from jumping to its fullscreen player. The first
+ * play starts at startSeconds; after that it loops from 0:00. loop needs
+ * playlist set to the same video. With no controls it reads as a
+ * backdrop; the button below handles sound.
  */
 const params = new URLSearchParams({
   enablejsapi: '1',
@@ -20,6 +20,8 @@ const params = new URLSearchParams({
   mute: '1',
   playsinline: '1',
   start: String(startSeconds),
+  loop: '1',
+  playlist: youtubeId,
   controls: '0',
   fs: '0',
   rel: '0',
@@ -35,7 +37,6 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
     <div class="hero-video">
       <iframe
         id="video-player"
-        data-start={startSeconds}
         src={embedUrl}
         title={`${title} by Money Back Guarantee*`}
         allow="autoplay; encrypted-media"
@@ -210,7 +211,7 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
 
 <script>
   /*
-   * This loops the video back to its start point (data-start), keeps it
+   * The video loops on its own (loop=1 in the URL); this just keeps it
    * going, lifts the still off it once it's playing, and runs the sound
    * button.
    */
@@ -241,7 +242,6 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
 
   if (hero && iframe && toggle) {
     let player: YTPlayer | null = null;
-    const start = Number(iframe.dataset.start) || 0;
     let soundOn = false;
 
     const label = toggle.querySelector('.sound-label');
@@ -278,7 +278,7 @@ const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?${params}`
             if (e.data === YT.PlayerState.PLAYING) {
               hero.classList.add('is-playing');
             } else if (e.data === YT.PlayerState.ENDED) {
-              player!.seekTo(start, true);
+              player!.seekTo(0, true);
               player!.playVideo();
             } else if (e.data === YT.PlayerState.PAUSED) {
               // An ambient video doesn't stay paused (iOS pauses it when
