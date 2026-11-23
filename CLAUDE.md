@@ -20,7 +20,7 @@ Money Back Guarantee* (mbgstar) — a band website built with Astro 6, server-re
 - **Astro 6** with `output: 'server'` and `@astrojs/cloudflare` adapter for SSR on Cloudflare Workers
 - **Single page**: `src/pages/index.astro` uses `src/layouts/BaseLayout.astro`
 - **llms.txt**: `src/pages/llms.txt.ts` serves `/llms.txt`, with upcoming shows read from `src/data/shows.ts`
-- **Mailing list**: the footer form posts to `src/pages/api/subscribe.ts`, which forwards the email to Substack's `/api/v1/free` signup endpoint
+- **Mailing list**: the footer form in `src/layouts/BaseLayout.astro` posts from the browser straight to Substack's `/api/v1/free` signup endpoint (server-side relays get rejected)
 - **Styling**: plain CSS in `src/styles/global.css` with CSS custom properties (`--bg`, `--ink`, `--paper`)
 - **Deployment**: Wrangler config in `wrangler.jsonc`; static assets served from `dist/` via the ASSETS binding
 - **TypeScript**: strict mode extending `astro/tsconfigs/strict`

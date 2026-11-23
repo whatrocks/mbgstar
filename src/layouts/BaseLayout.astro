@@ -11,12 +11,6 @@ const {
   description = 'Money Back Guarantee*'
 } = Astro.props;
 
-// Set when a browser without JavaScript is sent back after signing up.
-const subscribed = Astro.url.searchParams.get('subscribed');
-const status =
-  subscribed === '1' ? 'You’re on the list. Check your inbox to confirm.' :
-  subscribed === '0' ? 'Something went wrong. Try again?' : '';
-
 const path = Astro.url.pathname.replace(/\/$/, '');
 const navLinks = [
   { href: '/shows', label: 'Shows' },
@@ -85,7 +79,18 @@ const navLinks = [
             </a>
           </nav>
         </div>
-        <form class="mailing-list" id="mailing-list" method="post" action="/api/subscribe">
+        <!--
+          Posts straight to Substack's signup endpoint from the visitor's
+          browser, the way Substack's own embed does (it turns away signups
+          relayed from a server). Without JavaScript this lands on Substack's
+          confirmation page; with it, the visitor stays here.
+        -->
+        <form
+          class="mailing-list"
+          id="mailing-list"
+          method="post"
+          action="https://moneybackguarantee.substack.com/api/v1/free?nojs=true"
+        >
           <label class="visually-hidden" for="mailing-list-email">Email address</label>
           <input
             class="mailing-list-input"
@@ -97,7 +102,7 @@ const navLinks = [
             required
           />
           <button class="button button--white mailing-list-button" type="submit">Let me know</button>
-          <p class="mailing-list-status" role="status" aria-live="polite">{status}</p>
+          <p class="mailing-list-status" role="status" aria-live="polite"></p>
         </form>
       </div>
     </footer>
@@ -117,20 +122,23 @@ const navLinks = [
         const status = signup.querySelector('.mailing-list-status');
         if (button) button.disabled = true;
         if (status) status.textContent = 'Sending…';
-        let message = 'Something went wrong. Try again?';
+        const body = new URLSearchParams({
+          email: String(new FormData(signup).get('email') ?? ''),
+          first_url: location.href,
+          first_referrer: document.referrer,
+          current_url: location.href,
+          current_referrer: document.referrer,
+          source: 'embed'
+        });
         try {
-          const res = await fetch(signup.action, {
-            method: 'POST',
-            headers: { accept: 'application/json' },
-            body: new FormData(signup)
-          });
-          const data = (await res.json()) as { ok: boolean; message: string };
-          message = data.message;
-          if (data.ok) signup.reset();
+          // Substack doesn't allow other sites to read its replies, so this
+          // can only tell that the request went out, not that it succeeded.
+          await fetch(signup.action, { method: 'POST', mode: 'no-cors', body });
+          signup.reset();
+          if (status) status.textContent = 'You’re on the list. Check your inbox to confirm.';
         } catch {
-          // keep the generic message
+          if (status) status.textContent = 'Something went wrong. Try again?';
         }
-        if (status) status.textContent = message;
         if (button) button.disabled = false;
       });
 
